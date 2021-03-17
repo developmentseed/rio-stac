@@ -19,7 +19,7 @@ extra_reqs = {
 setup(
     name="rio-stac",
     version="0.1.0",
-    description=u"Create STAC Items from a raster data.",
+    description="Create STAC Items from a raster data.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     python_requires=">=3.6",
