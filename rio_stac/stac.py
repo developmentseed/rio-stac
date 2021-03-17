@@ -76,17 +76,32 @@ def create_stac_item(
     source: Union[str, DatasetReader, DatasetWriter, WarpedVRT, MemoryFile],
     input_datetime: Optional[datetime.datetime] = None,
     extensions: Optional[List[str]] = None,
-    item_links: List = [],
     collection: Optional[str] = None,
     item_properties: Optional[Dict] = None,
     id: Optional[str] = None,
-    asset_name: str = "cog",
+    asset_name: str = "asset",
     asset_roles: Optional[List[str]] = None,
     asset_media_type: pystac.MediaType = pystac.MediaType.COG,
-    assert_href: Optional[str] = None,
+    asset_href: Optional[str] = None,
 ) -> pystac.Item:
-    """Create a Stac Item."""
+    """Create a Stac Item.
 
+    Args:
+        source (str or rasterio openned dataset): input path or rasterio dataset.
+        input_datetime (datetime.datetime, optional): datetime associated with the item.
+        extensions (list of str): input list of extensions to use in the item.
+        collection (str, optional): collection's name the item belong to.
+        item_properties (dict, optional): additional properties to add in the item.
+        id (str, optional): id to assign to the item (default to the source basename).
+        asset_name (str, optional): asset name in the Assets object.
+        asset_roles (list of str, optional): list of asset's role.
+        asset_media_type (pystac.MediaType, optional): asset's media type (default to COG).
+        asset_href (str, optional): asset's URI (default to input path).
+
+    Returns:
+        pystac.Item: valid STAC Item.
+
+    """
     with ExitStack() as ctx:
         if isinstance(source, (DatasetReader, DatasetWriter, WarpedVRT)):
             src_dst = source
@@ -123,7 +138,7 @@ def create_stac_item(
     item.add_asset(
         key=asset_name,
         asset=pystac.Asset(
-            href=assert_href or meta["name"], media_type=asset_media_type,
+            href=asset_href or meta["name"], media_type=asset_media_type,
         ),
     )
 
