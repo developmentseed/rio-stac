@@ -55,9 +55,18 @@ def _cb_key_val(ctx, param, value):
 )
 @click.option("--id", type=str, help="Item id.")
 @click.option("--asset-name", "-n", type=str, default="cog", help="Asset name.")
+@click.option("--asset-href", type=str, default="asset", help="Overwrite asset href.")
 @click.option("--output", "-o", type=click.Path(exists=False), help="Output file name")
 def stac(
-    input, input_datetime, extension, collection, property, asset_name, id, output
+    input,
+    input_datetime,
+    extension,
+    collection,
+    property,
+    id,
+    asset_name,
+    asset_href,
+    output,
 ):
     """Rasterio stac cli."""
     property = property or {}
@@ -81,6 +90,7 @@ def stac(
         item_properties=property,
         id=id,
         asset_name=asset_name,
+        asset_href=asset_href,
     )
 
     if output:
