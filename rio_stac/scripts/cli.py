@@ -92,10 +92,12 @@ def stac(
     if asset_mediatype and asset_mediatype != "auto":
         asset_mediatype = MediaType[asset_mediatype]
 
+    extensions = [e for e in extension if e]
+
     item = create_stac_item(
         input,
         input_datetime=input_datetime,
-        extensions=extension,
+        extensions=extensions,
         collection=collection,
         item_properties=property,
         id=id,
@@ -106,6 +108,6 @@ def stac(
 
     if output:
         with open(output, "w") as f:
-            f.write(json.dumps(item, separators=(",", ":")))
+            f.write(json.dumps(item.to_dict(), separators=(",", ":")))
     else:
-        click.echo(json.dumps(item, separators=(",", ":")))
+        click.echo(json.dumps(item.to_dict(), separators=(",", ":")))
