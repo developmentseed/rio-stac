@@ -75,18 +75,16 @@ def get_metadata(
 
 
 def get_media_type(
-    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile],
-    input_media_type: Optional[pystac.MediaType] = None,
+    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile]
 ) -> Optional[pystac.MediaType]:
     """Define or validate MediaType."""
     driver = src_dst.driver
 
-    output_media_type = input_media_type
     if driver == "GTiff":
         if src_dst.crs:
-            output_media_type = pystac.MediaType.GEOTIFF
+            return pystac.MediaType.GEOTIFF
         else:
-            output_media_type = pystac.MediaType.TIFF
+            return pystac.MediaType.TIFF
 
     elif driver in [
         "JP2ECW",
@@ -96,31 +94,22 @@ def get_media_type(
         "JP2OpenJPEG",
         "JPEG2000",
     ]:
-        output_media_type = pystac.MediaType.JPEG2000
+        return pystac.MediaType.JPEG2000
 
     elif driver in ["HDF4", "HDF4Image"]:
-        output_media_type = pystac.MediaType.HDF
+        return pystac.MediaType.HDF
 
     elif driver in ["HDF5", "HDF5Image"]:
-        output_media_type = pystac.MediaType.HDF5
+        return pystac.MediaType.HDF5
 
     elif driver == "JPEG":
-        output_media_type = pystac.MediaType.JPEG
+        return pystac.MediaType.JPEG
 
     elif driver == "PNG":
-        output_media_type = pystac.MediaType.PNG
+        return pystac.MediaType.PNG
 
-    if not output_media_type:
-        warnings.warn("Could not determine the media type from GDAL driver.")
-        return input_media_type
-
-    if input_media_type == pystac.MediaType.COG and driver != "GTiff":
-        raise Exception("Input file is not a GeoTIFF.")
-
-    elif input_media_type and output_media_type != input_media_type:
-        raise Exception("MediaType do not match.")
-
-    return output_media_type
+    warnings.warn("Could not determine the media type from GDAL driver.")
+    return None
 
 
 def create_stac_item(
@@ -133,7 +122,7 @@ def create_stac_item(
     assets: Optional[Dict[str, pystac.Asset]] = None,
     asset_name: str = "asset",
     asset_roles: Optional[List[str]] = None,
-    asset_media_type: Optional[pystac.MediaType] = None,
+    asset_media_type: Optional[Union[str, pystac.MediaType]] = "auto",
     asset_href: Optional[str] = None,
 ) -> pystac.Item:
     """Create a Stac Item.
@@ -147,7 +136,7 @@ def create_stac_item(
         id (str, optional): id to assign to the item (default to the source basename).
         asset_name (str, optional): asset name in the Assets object.
         asset_roles (list of str, optional): list of asset's role.
-        asset_media_type (pystac.MediaType, optional): asset's media type (default to COG).
+        asset_media_type (str or pystac.MediaType, optional): asset's media type.
         asset_href (str, optional): asset's URI (default to input path).
 
     Returns:
@@ -161,7 +150,10 @@ def create_stac_item(
             src_dst = ctx.enter_context(rasterio.open(source))
 
         meta = get_metadata(src_dst)
-        asset_media_type = get_media_type(src_dst, input_media_type=asset_media_type)
+
+        media_type = (
+            get_media_type(src_dst) if asset_media_type == "auto" else asset_media_type
+        )
 
     properties = item_properties or {}
 
@@ -197,9 +189,7 @@ def create_stac_item(
     else:
         item.add_asset(
             key=asset_name,
-            asset=pystac.Asset(
-                href=asset_href or meta["name"], media_type=asset_media_type,
-            ),
+            asset=pystac.Asset(href=asset_href or meta["name"], media_type=media_type,),
         )
 
     return item

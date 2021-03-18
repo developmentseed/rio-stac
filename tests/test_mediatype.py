@@ -54,19 +54,3 @@ def test_unknow():
     with rasterio.open(src_path) as src_dst:
         with pytest.warns(UserWarning):
             assert not get_media_type(src_dst)
-
-
-@pytest.mark.parametrize(
-    "file,mediatype",
-    [
-        ["dataset.jpg", pystac.MediaType.COG],
-        ["dataset_cog.tif", pystac.MediaType.TIFF],
-        ["dataset.tif", pystac.MediaType.GEOTIFF],
-        ["dataset.jpg", pystac.MediaType.PNG],
-    ],
-)
-def test_invalid_input(file, mediatype):
-    src_path = os.path.join(PREFIX, file)
-    with rasterio.open(src_path) as src_dst:
-        with pytest.raises(Exception):
-            get_media_type(src_dst, mediatype)
