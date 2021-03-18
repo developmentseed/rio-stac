@@ -3,6 +3,7 @@ import datetime
 import json
 
 import click
+from pystac import MediaType
 from pystac.utils import datetime_to_str, str_to_datetime
 from rasterio.rio import options
 
@@ -56,6 +57,11 @@ def _cb_key_val(ctx, param, value):
 @click.option("--id", type=str, help="Item id.")
 @click.option("--asset-name", "-n", type=str, default="cog", help="Asset name.")
 @click.option("--asset-href", type=str, default="asset", help="Overwrite asset href.")
+@click.option(
+    "--asset-mediatype",
+    type=click.Choice([it.name for it in MediaType] + ["auto"]),
+    help="Asset media-type (e.g `image/tiff; application=geotiff; profile=cloud-optimized'`).",
+)
 @click.option("--output", "-o", type=click.Path(exists=False), help="Output file name")
 def stac(
     input,
@@ -66,6 +72,7 @@ def stac(
     id,
     asset_name,
     asset_href,
+    asset_mediatype,
     output,
 ):
     """Rasterio stac cli."""
@@ -82,6 +89,9 @@ def stac(
             property["end_datetime"] = datetime_to_str(str_to_datetime(end_datetime))
             input_datetime = None
 
+    if asset_mediatype and asset_mediatype != "auto":
+        asset_mediatype = MediaType[asset_mediatype]
+
     item = create_stac_item(
         input,
         input_datetime=input_datetime,
@@ -91,6 +101,7 @@ def stac(
         id=id,
         asset_name=asset_name,
         asset_href=asset_href,
+        asset_media_type=asset_mediatype,
     )
 
     if output:
