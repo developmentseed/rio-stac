@@ -82,10 +82,12 @@ def stac(
             property["end_datetime"] = datetime_to_str(str_to_datetime(end_datetime))
             input_datetime = None
 
+    extensions = [e for e in extension if e]
+
     item = create_stac_item(
         input,
         input_datetime=input_datetime,
-        extensions=extension,
+        extensions=extensions,
         collection=collection,
         item_properties=property,
         id=id,
