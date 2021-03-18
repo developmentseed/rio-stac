@@ -130,6 +130,7 @@ def create_stac_item(
     collection: Optional[str] = None,
     item_properties: Optional[Dict] = None,
     id: Optional[str] = None,
+    assets: Optional[Dict[str, pystac.Asset]] = None,
     asset_name: str = "asset",
     asset_roles: Optional[List[str]] = None,
     asset_media_type: Optional[pystac.MediaType] = None,
@@ -187,11 +188,18 @@ def create_stac_item(
     )
 
     # item.assets
-    item.add_asset(
-        key=asset_name,
-        asset=pystac.Asset(
-            href=asset_href or meta["name"], media_type=asset_media_type,
-        ),
-    )
+    if assets:
+        for key, asset in assets.items():
+            item.add_asset(
+                key=key, asset=asset,
+            )
 
-    return item.to_dict()
+    else:
+        item.add_asset(
+            key=asset_name,
+            asset=pystac.Asset(
+                href=asset_href or meta["name"], media_type=asset_media_type,
+            ),
+        )
+
+    return item

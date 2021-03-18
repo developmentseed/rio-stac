@@ -97,6 +97,6 @@ def stac(
 
     if output:
         with open(output, "w") as f:
-            f.write(json.dumps(item, separators=(",", ":")))
+            f.write(json.dumps(item.to_dict(), separators=(",", ":")))
     else:
-        click.echo(json.dumps(item, separators=(",", ":")))
+        click.echo(json.dumps(item.to_dict(), separators=(",", ":")))
