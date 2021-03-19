@@ -39,18 +39,18 @@ def get_metadata(
     metadata["name"] = src_dst.name
 
     # To Do: handle non-geo data
-    bbox = warp.transform_bounds(
-        src_dst.crs, "epsg:4326", *src_dst.bounds, densify_pts=21
-    )
+    if src_dst.crs is not None:
+        bbox = warp.transform_bounds(
+            src_dst.crs, "epsg:4326", *src_dst.bounds, densify_pts=21
+        )
+    else:
+        warnings.warn(
+            "Input file doesn't have geom information, setting bbox to (-180,-90,180,90)."
+        )
+        bbox = [-180.0, -90.0, 180.0, 90.0]
 
     metadata["bbox"] = list(bbox)
     metadata["footprint"] = bbox_to_geom(bbox)
-
-    # GDAL Metadata
-    metadata["tags"] = src_dst.tags()
-    metadata["width"] = src_dst.width
-    metadata["height"] = src_dst.height
-    metadata["dtype"] = src_dst.dtypes[0]
 
     # Proj
     try:
@@ -117,12 +117,12 @@ def create_stac_item(
     input_datetime: Optional[datetime.datetime] = None,
     extensions: Optional[List[str]] = None,
     collection: Optional[str] = None,
-    item_properties: Optional[Dict] = None,
+    properties: Optional[Dict] = None,
     id: Optional[str] = None,
     assets: Optional[Dict[str, pystac.Asset]] = None,
     asset_name: str = "asset",
     asset_roles: Optional[List[str]] = None,
-    asset_media_type: Optional[Union[str, pystac.MediaType]] = "auto",
+    asset_media_type: Optional[Union[str, pystac.MediaType]] = None,
     asset_href: Optional[str] = None,
 ) -> pystac.Item:
     """Create a Stac Item.
@@ -132,8 +132,9 @@ def create_stac_item(
         input_datetime (datetime.datetime, optional): datetime associated with the item.
         extensions (list of str): input list of extensions to use in the item.
         collection (str, optional): collection's name the item belong to.
-        item_properties (dict, optional): additional properties to add in the item.
+        properties (dict, optional): additional properties to add in the item.
         id (str, optional): id to assign to the item (default to the source basename).
+        assets (dict, optional): Assets to set in the item. If set we won't create one from the source.
         asset_name (str, optional): asset name in the Assets object.
         asset_roles (list of str, optional): list of asset's role.
         asset_media_type (str or pystac.MediaType, optional): asset's media type.
@@ -155,7 +156,7 @@ def create_stac_item(
             get_media_type(src_dst) if asset_media_type == "auto" else asset_media_type
         )
 
-    properties = item_properties or {}
+    properties = properties or {}
 
     extensions = extensions or []
 
@@ -189,7 +190,7 @@ def create_stac_item(
     else:
         item.add_asset(
             key=asset_name,
-            asset=pystac.Asset(href=asset_href or meta["name"], media_type=media_type,),
+            asset=pystac.Asset(href=asset_href or meta["name"], media_type=media_type),
         )
 
     return item

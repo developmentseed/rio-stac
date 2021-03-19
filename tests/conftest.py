@@ -14,3 +14,11 @@ requires_hdf5 = pytest.mark.skipif(
 requires_hdf4 = pytest.mark.skipif(
     "HDF4" not in drivers.keys(), reason="Only relevant if HDF4 drivers is supported"
 )
+
+
+@pytest.fixture
+def runner():
+    """CLI Runner fixture."""
+    from click.testing import CliRunner
+
+    return CliRunner()

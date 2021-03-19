@@ -55,7 +55,7 @@ def _cb_key_val(ctx, param, value):
     help="Additional property to add.",
 )
 @click.option("--id", type=str, help="Item id.")
-@click.option("--asset-name", "-n", type=str, default="cog", help="Asset name.")
+@click.option("--asset-name", "-n", type=str, default="asset", help="Asset name.")
 @click.option("--asset-href", type=str, default="asset", help="Overwrite asset href.")
 @click.option(
     "--asset-mediatype",
@@ -81,13 +81,15 @@ def stac(
     if not input_datetime:
         input_datetime = datetime.datetime.utcnow()
     else:
-        if isinstance(input_datetime, str) and "/" in input_datetime:
+        if "/" in input_datetime:
             start_datetime, end_datetime = input_datetime.split("/")
             property["start_datetime"] = datetime_to_str(
                 str_to_datetime(start_datetime)
             )
             property["end_datetime"] = datetime_to_str(str_to_datetime(end_datetime))
             input_datetime = None
+        else:
+            input_datetime = str_to_datetime(input_datetime)
 
     if asset_mediatype and asset_mediatype != "auto":
         asset_mediatype = MediaType[asset_mediatype]
@@ -99,7 +101,7 @@ def stac(
         input_datetime=input_datetime,
         extensions=extensions,
         collection=collection,
-        item_properties=property,
+        properties=property,
         id=id,
         asset_name=asset_name,
         asset_href=asset_href,
