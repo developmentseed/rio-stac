@@ -26,12 +26,14 @@ def test_rio_stac_cli(runner):
         assert "proj:epsg" in stac_item["properties"]
 
         result = runner.invoke(
-            stac, [src_path, "--extension", "", "--datetime", "2010-01-01"]
+            stac,
+            [src_path, "--extension", "", "--datetime", "2010-01-01", "--id", "000001"],
         )
         assert not result.exception
         assert result.exit_code == 0
         stac_item = json.loads(result.output)
         assert stac_item["stac_extensions"] == []
+        assert stac_item["id"] == "000001"
         assert "datetime" in stac_item["properties"]
         assert stac_item["properties"]["datetime"] == "2010-01-01T00:00:00Z"
 

@@ -15,7 +15,7 @@ from rasterio.vrt import WarpedVRT
 
 def bbox_to_geom(bbox: Tuple[float, float, float, float]) -> Dict:
     """Return a geojson geometry from a bbox."""
-    # TODO: Handle dateline geometry
+    # TODO: Handle dateline crossing geometry
     return {
         "type": "Polygon",
         "coordinates": [
