@@ -57,7 +57,7 @@ def _cb_key_val(ctx, param, value):
 )
 @click.option("--id", type=str, help="Item id.")
 @click.option("--asset-name", "-n", type=str, default="asset", help="Asset name.")
-@click.option("--asset-href", type=str, default="asset", help="Overwrite asset href.")
+@click.option("--asset-href", type=str, help="Overwrite asset href.")
 @click.option(
     "--asset-mediatype",
     type=click.Choice([it.name for it in MediaType] + ["auto"]),

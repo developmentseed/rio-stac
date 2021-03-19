@@ -20,6 +20,7 @@ def test_rio_stac_cli(runner):
         stac_item = json.loads(result.output)
         assert stac_item["type"] == "Feature"
         assert stac_item["assets"]["asset"]
+        assert stac_item["assets"]["asset"]["href"] == src_path
         assert stac_item["links"] == []
         assert stac_item["stac_extensions"] == ["proj"]
         assert "datetime" in stac_item["properties"]
