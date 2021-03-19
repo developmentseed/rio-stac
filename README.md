@@ -36,7 +36,6 @@
 ## Install
 
 ```bash
-
 $ pip install pip -U
 $ pip install rio-stac
 
@@ -48,21 +47,23 @@ $ pip install git+http://github.com/developmentseed/rio-stac
 ## CLI
 
 ```
-rio stac --help
+$ rio stac --help
+
 Usage: rio stac [OPTIONS] INPUT
 
   Rasterio stac cli.
 
 Options:
-  -d, --datetime               TEXT        The searchable date and time of the assets, in UTC.
-  --with-proj / --without-proj             Add PROJ extension and metadata.
-  -e, --extention              TEXT        STAC extension the Item implements.
-  -c, --collection             TEXT        The Collection ID that this item belongs to.
-  -p, --property               NAME=VALUE  Additional property to add.
-  --id                         TEXT        Item id.
-  -n, --asset-name             TEXT        Asset name.
-  -o, --output                 PATH        Output file name
-  --help                                   Show this message and exit.
+  -d, --datetime TEXT             The date and time of the assets, in UTC (e.g 2020-01-01, 2020-01-01T01:01:01).
+  -e, --extension TEXT            STAC extension the Item implements.
+  -c, --collection TEXT           The Collection ID that this item belongs to.
+  -p, --property NAME=VALUE       Additional property to add.
+  --id TEXT                       Item id.
+  -n, --asset-name TEXT           Asset name.
+  --asset-href TEXT               Overwrite asset href.
+  --asset-mediatype [COG|GEOJSON|GEOPACKAGE|GEOTIFF|HDF|HDF5|JPEG|JPEG2000|JSON|PNG|TEXT|TIFF|XML|auto] Asset media-type.
+  -o, --output PATH               Output file name
+  --help                          Show this message and exit.
 ```
 
 ## Example
@@ -72,98 +73,97 @@ $ rio stac S-2_20200422_COG.tif | jq
 {
   "type": "Feature",
   "stac_version": "1.0.0-beta.2",
-  "id": "S-2_20200422_COG.tif",
+  "id": "eu_webAligned_256pxWEBP.tif",
   "properties": {
-    "proj:epsg": 32632,
+    "proj:epsg": 3857,
     "proj:geometry": {
       "type": "Polygon",
       "coordinates": [
         [
           [
-            342765,
-            5971585
+            -10018754.17139461,
+            20037508.3427892
           ],
           [
-            342765,
-            5682885
+            -10018754.17139461,
+            -2.9802322387695312e-08
           ],
           [
-            674215,
-            5682885
+            10018754.171394618,
+            -2.9802322387695312e-08
           ],
           [
-            674215,
-            5971585
+            10018754.171394618,
+            20037508.3427892
           ],
           [
-            342765,
-            5971585
+            -10018754.17139461,
+            20037508.3427892
           ]
         ]
       ]
     },
     "proj:bbox": [
-      342765,
-      5682885,
-      674215,
-      5971585
+      -10018754.17139461,
+      -2.9802322387695312e-08,
+      10018754.171394618,
+      20037508.3427892
     ],
     "proj:shape": [
-      28870,
-      33145
+      8192,
+      8192
     ],
     "proj:transform": [
-      10,
+      2445.9849051256383,
       0,
-      342765,
+      -10018754.17139461,
       0,
-      -10,
-      5971585,
+      -2445.9849051256383,
+      20037508.3427892,
       0,
       0,
       1
     ],
-    "datetime": "2021-03-15T22:39:56.257899Z"
+    "datetime": "2021-03-19T02:27:33.266356Z"
   },
   "geometry": {
     "type": "Polygon",
     "coordinates": [
       [
         [
-          6.608576517072109,
-          53.89267160832536
+          -89.9999999999999,
+          85.05112877980656
         ],
         [
-          6.608576517072109,
-          51.270642883468916
+          -89.9999999999999,
+          -2.671665932429354e-13
         ],
         [
-          11.64938680867944,
-          51.270642883468916
+          89.99999999999996,
+          -2.671665932429354e-13
         ],
         [
-          11.64938680867944,
-          53.89267160832536
+          89.99999999999996,
+          85.05112877980656
         ],
         [
-          6.608576517072109,
-          53.89267160832536
+          -89.9999999999999,
+          85.05112877980656
         ]
       ]
     ]
   },
   "links": [],
   "assets": {
-    "cog": {
-      "href": "S-2_20200422_COG.tif",
-      "type": "image/tiff; application=geotiff; profile=cloud-optimized"
+    "asset": {
+      "href": "asset"
     }
   },
   "bbox": [
-    6.608576517072109,
-    51.270642883468916,
-    11.64938680867944,
-    53.89267160832536
+    -89.9999999999999,
+    -2.671665932429354e-13,
+    89.99999999999996,
+    85.05112877980656
   ],
   "stac_extensions": [
     "proj"

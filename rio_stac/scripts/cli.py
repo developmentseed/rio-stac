@@ -33,7 +33,7 @@ def _cb_key_val(ctx, param, value):
     "-d",
     "input_datetime",
     type=str,
-    help="The searchable date and time of the assets, in UTC.",
+    help="The date and time of the assets, in UTC (e.g 2020-01-01, 2020-01-01T01:01:01).",
 )
 @click.option(
     "--extension",
@@ -60,7 +60,7 @@ def _cb_key_val(ctx, param, value):
 @click.option(
     "--asset-mediatype",
     type=click.Choice([it.name for it in MediaType] + ["auto"]),
-    help="Asset media-type (e.g `image/tiff; application=geotiff; profile=cloud-optimized'`).",
+    help="Asset media-type.",
 )
 @click.option("--output", "-o", type=click.Path(exists=False), help="Output file name")
 def stac(
