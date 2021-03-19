@@ -1,0 +1,1 @@
+"""rio-stac tests suite."""
