@@ -1,4 +1,5 @@
 """rio_stac.scripts.cli."""
+
 import datetime
 import json
 

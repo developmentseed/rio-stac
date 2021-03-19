@@ -1,0 +1,76 @@
+# Project Information
+site_name: 'rio-stac'
+site_description: 'Create a STAC Items from raster datasets.'
+
+docs_dir: 'docs'
+site_dir: 'build'
+
+# Repository
+repo_name: 'developmentseed/rio-stac'
+repo_url: 'http://github.com/developmentseed/rio-stac'
+edit_uri: 'blob/master/docs/src/'
+site_url: 'https://developmentseed.org/rio-stac/'
+
+# Social links
+extra:
+  social:
+    - icon: 'fontawesome/brands/github'
+      link: 'https://github.com/developmentseed'
+    - icon: 'fontawesome/brands/twitter'
+      link: 'https://twitter.com/developmentseed'
+
+# Layout
+nav:
+  - Home: 'index.md'
+  - User Guide: 'intro.md'
+  - API:
+    - rio_stac.stac: api/rio_stac/stac.md
+  - Development - Contributing: 'contributing.md'
+  - Release Notes: 'release-notes.md'
+
+plugins:
+  - search
+
+# Theme
+theme:
+  icon:
+    logo: 'material/home'
+    repo: 'fontawesome/brands/github'
+  name: 'material'
+  language: 'en'
+  palette:
+    primary: 'red'
+    accent:  'light red'
+  font:
+    text: 'Nunito Sans'
+    code: 'Fira Code'
+
+# These extensions are chosen to be a superset of Pandoc's Markdown.
+# This way, I can write in Pandoc's Markdown and have it be supported here.
+# https://pandoc.org/MANUAL.html
+markdown_extensions:
+    - admonition
+    - attr_list
+    - codehilite:
+        guess_lang: false
+    - def_list
+    - footnotes
+    - pymdownx.arithmatex
+    - pymdownx.betterem
+    - pymdownx.caret:
+        insert: false
+    - pymdownx.details
+    - pymdownx.emoji
+    - pymdownx.escapeall:
+        hardbreak: true
+        nbsp: true
+    - pymdownx.magiclink:
+        hide_protocol: true
+        repo_url_shortener: true
+    - pymdownx.smartsymbols
+    - pymdownx.superfences
+    - pymdownx.tasklist:
+        custom_checkbox: true
+    - pymdownx.tilde
+    - toc:
+        permalink: true

@@ -77,7 +77,7 @@ def get_metadata(
 def get_media_type(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile]
 ) -> Optional[pystac.MediaType]:
-    """Define or validate MediaType."""
+    """Find MediaType for a raster dataset."""
     driver = src_dst.driver
 
     if driver == "GTiff":
