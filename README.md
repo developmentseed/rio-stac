@@ -4,7 +4,7 @@
   <img src="https://user-images.githubusercontent.com/10407788/111794250-696da080-889c-11eb-9043-5bdc3aadb8bf.png" alt="rio-stac"></a>
 </p>
 <p align="center">
-  <em>Create a STAC Items from raster datasets.</em>
+  <em>Create STAC Items from raster datasets.</em>
 </p>
 <p align="center">
   <a href="https://github.com/developmentseed/rio-stac/actions?query=workflow%3ACI" target="_blank">
@@ -32,7 +32,7 @@
 
 ---
 
-`rio-stac` is a simple [rasterio](https://github.com/mapbox/rasterio) plugin for creating valid STAC item from raster dataset. The library is build on top of [pystac](https://github.com/stac-utils/pystac) to make sure we follow the STAC specification.
+`rio-stac` is a simple [rasterio](https://github.com/mapbox/rasterio) plugin for creating valid STAC item from raster dataset. The library is built on top of [pystac](https://github.com/stac-utils/pystac) to make sure we follow the STAC specification.
 
 ## Installation
 
@@ -42,7 +42,7 @@ $ pip install pip -U
 # From Pypi
 $ pip install rio-stac
 
-# Or from sources
+# Or from source
 $ pip install git+http://github.com/developmentseed/rio-stac
 ```
 
