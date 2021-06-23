@@ -40,9 +40,9 @@ def _cb_key_val(ctx, param, value):
     "--extension",
     "-e",
     type=str,
-    default=["proj"],
+    default=["https://stac-extensions.github.io/projection/v1.0.0/schema.json"],
     multiple=True,
-    help="STAC extension the Item implements.",
+    help="STAC extension URL the Item implements.",
 )
 @click.option(
     "--collection", "-c", type=str, help="The Collection ID that this item belongs to."

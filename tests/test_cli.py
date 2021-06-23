@@ -22,7 +22,9 @@ def test_rio_stac_cli(runner):
         assert stac_item["assets"]["asset"]
         assert stac_item["assets"]["asset"]["href"] == src_path
         assert stac_item["links"] == []
-        assert stac_item["stac_extensions"] == ["proj"]
+        assert stac_item["stac_extensions"] == [
+            "https://stac-extensions.github.io/projection/v1.0.0/schema.json"
+        ]
         assert "datetime" in stac_item["properties"]
         assert "proj:epsg" in stac_item["properties"]
 
@@ -80,6 +82,8 @@ def test_rio_stac_cli(runner):
         assert stac_item["type"] == "Feature"
         assert stac_item["assets"]["asset"]
         assert stac_item["links"] == []
-        assert stac_item["stac_extensions"] == ["proj"]
+        assert stac_item["stac_extensions"] == [
+            "https://stac-extensions.github.io/projection/v1.0.0/schema.json"
+        ]
         assert "datetime" in stac_item["properties"]
         assert "proj:epsg" in stac_item["properties"]

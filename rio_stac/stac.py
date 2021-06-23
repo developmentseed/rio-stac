@@ -5,6 +5,7 @@ import os
 import warnings
 from contextlib import ExitStack
 from typing import Any, Dict, List, Optional, Tuple, Union
+from urllib.parse import urlparse
 
 import pystac
 import rasterio
@@ -117,6 +118,7 @@ def create_stac_item(
     input_datetime: Optional[datetime.datetime] = None,
     extensions: Optional[List[str]] = None,
     collection: Optional[str] = None,
+    collection_url: Optional[str] = None,
     properties: Optional[Dict] = None,
     id: Optional[str] = None,
     assets: Optional[Dict[str, pystac.Asset]] = None,
@@ -132,6 +134,7 @@ def create_stac_item(
         input_datetime (datetime.datetime, optional): datetime associated with the item.
         extensions (list of str): input list of extensions to use in the item.
         collection (str, optional): collection's name the item belong to.
+        collection_url (str, optional): Link to the STAC Collection.
         properties (dict, optional): additional properties to add in the item.
         id (str, optional): id to assign to the item (default to the source basename).
         assets (dict, optional): Assets to set in the item. If set we won't create one from the source.
@@ -160,7 +163,11 @@ def create_stac_item(
 
     extensions = extensions or []
 
-    if "proj" in extensions:
+    extension_names = [
+        urlparse(extension).path.split("/")[1] for extension in extensions
+    ]
+
+    if "projection" in extension_names:
         properties.update(
             {
                 f"proj:{name}": value
@@ -179,6 +186,15 @@ def create_stac_item(
         datetime=input_datetime,
         properties=properties,
     )
+
+    if collection:
+        item.add_link(
+            pystac.Link(
+                pystac.RelType.COLLECTION,
+                collection_url or collection,
+                media_type=pystac.MediaType.JSON,
+            )
+        )
 
     # item.assets
     if assets:

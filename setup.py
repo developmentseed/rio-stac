@@ -7,12 +7,12 @@ with open("README.md") as f:
 
 inst_reqs = [
     "rasterio",
-    "pystac>=0.5,<0.6",
+    "pystac>=1.0.0rc1,<1.0.1",
 ]
 
 extra_reqs = {
-    "dev": ["pytest", "pytest-cov", "pre-commit", "requests"],
-    "test": ["pytest", "pytest-cov", "requests"],
+    "dev": ["pytest", "pytest-cov", "pre-commit", "requests", "jsonschema>=3.0"],
+    "test": ["pytest", "pytest-cov", "requests", "jsonschema>=3.0"],
     "docs": ["mkdocs", "mkdocs-material", "pygments", "pdocs"],
 }
 
