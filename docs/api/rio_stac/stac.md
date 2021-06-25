@@ -44,15 +44,15 @@ Create a Stac Item.
 
 | Name | Type | Description | Default |
 |---|---|---|---|
-| source | str or rasterio openned dataset | input path or rasterio dataset. | None |
+| source | str or opened rasterio dataset | input path or rasterio dataset. | None |
 | input_datetime | datetime.datetime | datetime associated with the item. | None |
 | extensions | list of str | input list of extensions to use in the item. | None |
-| collection | str | collection's name the item belong to. | None |
+| collection | str | name of collection the item belongs to. | None |
 | properties | dict | additional properties to add in the item. | None |
 | id | str | id to assign to the item (default to the source basename). | None |
 | assets | dict | Assets to set in the item. If set we won't create one from the source. | None |
 | asset_name | str | asset name in the Assets object. | None |
-| asset_roles | list of str | list of asset's role. | None |
+| asset_roles | list of str | list of asset's roles. | None |
 | asset_media_type | str or pystac.MediaType | asset's media type. | None |
 | asset_href | str | asset's URI (default to input path). | None |
 
