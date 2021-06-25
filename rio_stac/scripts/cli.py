@@ -40,7 +40,6 @@ def _cb_key_val(ctx, param, value):
     "--extension",
     "-e",
     type=str,
-    default=["https://stac-extensions.github.io/projection/v1.0.0/schema.json"],
     multiple=True,
     help="STAC extension URL the Item implements.",
 )
@@ -63,6 +62,11 @@ def _cb_key_val(ctx, param, value):
     type=click.Choice([it.name for it in MediaType] + ["auto"]),
     help="Asset media-type.",
 )
+@click.option(
+    "--with-proj/--without-proj",
+    default=True,
+    help="Add the projection extension and the projection properties.",
+)
 @click.option("--output", "-o", type=click.Path(exists=False), help="Output file name")
 def stac(
     input,
@@ -74,6 +78,7 @@ def stac(
     asset_name,
     asset_href,
     asset_mediatype,
+    with_proj,
     output,
 ):
     """Rasterio stac cli."""
@@ -107,6 +112,7 @@ def stac(
         asset_name=asset_name,
         asset_href=asset_href,
         asset_media_type=asset_mediatype,
+        with_proj=with_proj,
     )
 
     if output:

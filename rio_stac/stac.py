@@ -5,13 +5,14 @@ import os
 import warnings
 from contextlib import ExitStack
 from typing import Any, Dict, List, Optional, Tuple, Union
-from urllib.parse import urlparse
 
 import pystac
 import rasterio
 from rasterio import warp
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.vrt import WarpedVRT
+
+PROJECTION_EXT_VERSION = "v1.0.0"
 
 
 def bbox_to_geom(bbox: Tuple[float, float, float, float]) -> Dict:
@@ -126,6 +127,7 @@ def create_stac_item(
     asset_roles: Optional[List[str]] = None,
     asset_media_type: Optional[Union[str, pystac.MediaType]] = None,
     asset_href: Optional[str] = None,
+    with_proj: bool = False,
 ) -> pystac.Item:
     """Create a Stac Item.
 
@@ -142,6 +144,7 @@ def create_stac_item(
         asset_roles (list of str, optional): list of asset's role.
         asset_media_type (str or pystac.MediaType, optional): asset's media type.
         asset_href (str, optional): asset's URI (default to input path).
+        with_proj (bool): Add the projection extension and properties.
 
     Returns:
         pystac.Item: valid STAC Item.
@@ -163,17 +166,16 @@ def create_stac_item(
 
     extensions = extensions or []
 
-    extension_names = [
-        urlparse(extension).path.split("/")[1] for extension in extensions
-    ]
-
-    if "projection" in extension_names:
+    if with_proj:
         properties.update(
             {
                 f"proj:{name}": value
                 for name, value in meta["proj"].items()
                 if value is not None
             }
+        )
+        extensions.append(
+            f"https://stac-extensions.github.io/projection/{PROJECTION_EXT_VERSION}/schema.json",
         )
 
     # item

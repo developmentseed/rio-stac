@@ -30,7 +30,7 @@ def test_rio_stac_cli(runner):
 
         result = runner.invoke(
             stac,
-            [src_path, "--extension", "", "--datetime", "2010-01-01", "--id", "000001"],
+            [src_path, "--without-proj", "--datetime", "2010-01-01", "--id", "000001"],
         )
         assert not result.exception
         assert result.exit_code == 0
@@ -41,7 +41,7 @@ def test_rio_stac_cli(runner):
         assert stac_item["properties"]["datetime"] == "2010-01-01T00:00:00Z"
 
         result = runner.invoke(
-            stac, [src_path, "--extension", "", "--datetime", "2010-01-01/2010-01-02"]
+            stac, [src_path, "--without-proj", "--datetime", "2010-01-01/2010-01-02"]
         )
         assert not result.exception
         assert result.exit_code == 0

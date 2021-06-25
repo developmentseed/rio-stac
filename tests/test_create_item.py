@@ -60,7 +60,10 @@ def test_create_item_options():
 
     # default COG
     item = create_stac_item(
-        src_path, input_datetime=input_date, asset_media_type=pystac.MediaType.COG,
+        src_path,
+        input_datetime=input_date,
+        asset_media_type=pystac.MediaType.COG,
+        with_proj=False,
     )
     assert item.validate()
     item_dict = item.to_dict()
@@ -73,19 +76,36 @@ def test_create_item_options():
     item = create_stac_item(
         src_path,
         input_datetime=input_date,
-        extensions=[
-            "https://stac-extensions.github.io/projection/v1.0.0/schema.json",
-            "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
-        ],
+        extensions=["https://stac-extensions.github.io/scientific/v1.0.0/schema.json"],
         properties={"sci:citation": "A nice image"},
+        with_proj=False,
     )
     assert item.validate()
     item_dict = item.to_dict()
     assert "type" not in item_dict["assets"]["asset"]
     assert item_dict["links"] == []
     assert item_dict["stac_extensions"] == [
-        "https://stac-extensions.github.io/projection/v1.0.0/schema.json",
         "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
+    ]
+    assert "datetime" in item_dict["properties"]
+    assert "proj:epsg" not in item_dict["properties"]
+    assert "sci:citation" in item_dict["properties"]
+
+    # additional extensions and properties
+    item = create_stac_item(
+        src_path,
+        input_datetime=input_date,
+        extensions=["https://stac-extensions.github.io/scientific/v1.0.0/schema.json"],
+        properties={"sci:citation": "A nice image"},
+        with_proj=True,
+    )
+    assert item.validate()
+    item_dict = item.to_dict()
+    assert "type" not in item_dict["assets"]["asset"]
+    assert item_dict["links"] == []
+    assert item_dict["stac_extensions"] == [
+        "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
+        "https://stac-extensions.github.io/projection/v1.0.0/schema.json",
     ]
     assert "datetime" in item_dict["properties"]
     assert "proj:epsg" in item_dict["properties"]
@@ -93,7 +113,9 @@ def test_create_item_options():
 
     # external assets
     assets = {"cog": pystac.Asset(href=src_path)}
-    item = create_stac_item(src_path, input_datetime=input_date, assets=assets)
+    item = create_stac_item(
+        src_path, input_datetime=input_date, assets=assets, with_proj=False
+    )
     assert item.validate()
     item_dict = item.to_dict()
     assert item_dict["assets"]["cog"]
@@ -103,7 +125,7 @@ def test_create_item_options():
 
     # collection
     item = create_stac_item(
-        src_path, input_datetime=input_date, collection="mycollection",
+        src_path, input_datetime=input_date, collection="mycollection", with_proj=False
     )
     assert item.validate()
     item_dict = item.to_dict()
@@ -117,6 +139,7 @@ def test_create_item_options():
         input_datetime=input_date,
         collection="mycollection",
         collection_url="https://stac.somewhere.io/mycollection.json",
+        with_proj=False,
     )
     assert item.validate()
     item_dict = item.to_dict()
