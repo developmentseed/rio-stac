@@ -12,6 +12,8 @@ from rasterio import warp
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.vrt import WarpedVRT
 
+PROJECTION_EXT_VERSION = "v1.0.0"
+
 
 def bbox_to_geom(bbox: Tuple[float, float, float, float]) -> Dict:
     """Return a geojson geometry from a bbox."""
@@ -117,6 +119,7 @@ def create_stac_item(
     input_datetime: Optional[datetime.datetime] = None,
     extensions: Optional[List[str]] = None,
     collection: Optional[str] = None,
+    collection_url: Optional[str] = None,
     properties: Optional[Dict] = None,
     id: Optional[str] = None,
     assets: Optional[Dict[str, pystac.Asset]] = None,
@@ -124,6 +127,7 @@ def create_stac_item(
     asset_roles: Optional[List[str]] = None,
     asset_media_type: Optional[Union[str, pystac.MediaType]] = None,
     asset_href: Optional[str] = None,
+    with_proj: bool = False,
 ) -> pystac.Item:
     """Create a Stac Item.
 
@@ -132,6 +136,7 @@ def create_stac_item(
         input_datetime (datetime.datetime, optional): datetime associated with the item.
         extensions (list of str): input list of extensions to use in the item.
         collection (str, optional): collection's name the item belong to.
+        collection_url (str, optional): Link to the STAC Collection.
         properties (dict, optional): additional properties to add in the item.
         id (str, optional): id to assign to the item (default to the source basename).
         assets (dict, optional): Assets to set in the item. If set we won't create one from the source.
@@ -139,6 +144,7 @@ def create_stac_item(
         asset_roles (list of str, optional): list of asset's role.
         asset_media_type (str or pystac.MediaType, optional): asset's media type.
         asset_href (str, optional): asset's URI (default to input path).
+        with_proj (bool): Add the projection extension and properties (default to False).
 
     Returns:
         pystac.Item: valid STAC Item.
@@ -160,13 +166,17 @@ def create_stac_item(
 
     extensions = extensions or []
 
-    if "proj" in extensions:
+    # add projection properties
+    if with_proj:
         properties.update(
             {
                 f"proj:{name}": value
                 for name, value in meta["proj"].items()
                 if value is not None
             }
+        )
+        extensions.append(
+            f"https://stac-extensions.github.io/projection/{PROJECTION_EXT_VERSION}/schema.json",
         )
 
     # item
@@ -179,6 +189,16 @@ def create_stac_item(
         datetime=input_datetime,
         properties=properties,
     )
+
+    # if we add a collection we MUST add a link
+    if collection:
+        item.add_link(
+            pystac.Link(
+                pystac.RelType.COLLECTION,
+                collection_url or collection,
+                media_type=pystac.MediaType.JSON,
+            )
+        )
 
     # item.assets
     if assets:

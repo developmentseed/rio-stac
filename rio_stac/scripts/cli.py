@@ -40,13 +40,13 @@ def _cb_key_val(ctx, param, value):
     "--extension",
     "-e",
     type=str,
-    default=["proj"],
     multiple=True,
-    help="STAC extension the Item implements.",
+    help="STAC extension URL the Item implements.",
 )
 @click.option(
     "--collection", "-c", type=str, help="The Collection ID that this item belongs to."
 )
+@click.option("--collection-url", type=str, help="Link to the STAC Collection.")
 @click.option(
     "--property",
     "-p",
@@ -63,20 +63,27 @@ def _cb_key_val(ctx, param, value):
     type=click.Choice([it.name for it in MediaType] + ["auto"]),
     help="Asset media-type.",
 )
+@click.option(
+    "--with-proj/--without-proj",
+    default=True,
+    help="Add the projection extension and properties (default to True).",
+)
 @click.option("--output", "-o", type=click.Path(exists=False), help="Output file name")
 def stac(
     input,
     input_datetime,
     extension,
     collection,
+    collection_url,
     property,
     id,
     asset_name,
     asset_href,
     asset_mediatype,
+    with_proj,
     output,
 ):
-    """Rasterio stac cli."""
+    """Rasterio STAC plugin: Create a STAC Item for raster dataset."""
     property = property or {}
 
     if not input_datetime:
@@ -102,11 +109,13 @@ def stac(
         input_datetime=input_datetime,
         extensions=extensions,
         collection=collection,
+        collection_url=collection_url,
         properties=property,
         id=id,
         asset_name=asset_name,
         asset_href=asset_href,
         asset_media_type=asset_mediatype,
+        with_proj=with_proj,
     )
 
     if output:
