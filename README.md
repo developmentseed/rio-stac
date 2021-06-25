@@ -32,7 +32,7 @@
 
 ---
 
-`rio-stac` is a simple [rasterio](https://github.com/mapbox/rasterio) plugin for creating valid STAC item from raster dataset. The library is built on top of [pystac](https://github.com/stac-utils/pystac) to make sure we follow the STAC specification.
+`rio-stac` is a simple [rasterio](https://github.com/mapbox/rasterio) plugin for creating valid STAC items from a raster dataset. The library is built on top of [pystac](https://github.com/stac-utils/pystac) to make sure we follow the STAC specification.
 
 ## Installation
 
