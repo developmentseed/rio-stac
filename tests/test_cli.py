@@ -23,14 +23,24 @@ def test_rio_stac_cli(runner):
         assert stac_item["assets"]["asset"]["href"] == src_path
         assert stac_item["links"] == []
         assert stac_item["stac_extensions"] == [
-            "https://stac-extensions.github.io/projection/v1.0.0/schema.json"
+            "https://stac-extensions.github.io/projection/v1.0.0/schema.json",
+            "https://stac-extensions.github.io/raster/v1.0.0/schema.json",
         ]
         assert "datetime" in stac_item["properties"]
         assert "proj:epsg" in stac_item["properties"]
+        assert "raster:bands" in stac_item["properties"]
 
         result = runner.invoke(
             stac,
-            [src_path, "--without-proj", "--datetime", "2010-01-01", "--id", "000001"],
+            [
+                src_path,
+                "--without-proj",
+                "--without-raster",
+                "--datetime",
+                "2010-01-01",
+                "--id",
+                "000001",
+            ],
         )
         assert not result.exception
         assert result.exit_code == 0
@@ -41,7 +51,14 @@ def test_rio_stac_cli(runner):
         assert stac_item["properties"]["datetime"] == "2010-01-01T00:00:00Z"
 
         result = runner.invoke(
-            stac, [src_path, "--without-proj", "--datetime", "2010-01-01/2010-01-02"]
+            stac,
+            [
+                src_path,
+                "--without-proj",
+                "--without-raster",
+                "--datetime",
+                "2010-01-01/2010-01-02",
+            ],
         )
         assert not result.exception
         assert result.exit_code == 0
@@ -83,7 +100,9 @@ def test_rio_stac_cli(runner):
         assert stac_item["assets"]["asset"]
         assert stac_item["links"] == []
         assert stac_item["stac_extensions"] == [
-            "https://stac-extensions.github.io/projection/v1.0.0/schema.json"
+            "https://stac-extensions.github.io/projection/v1.0.0/schema.json",
+            "https://stac-extensions.github.io/raster/v1.0.0/schema.json",
         ]
         assert "datetime" in stac_item["properties"]
         assert "proj:epsg" in stac_item["properties"]
+        assert "raster:bands" in stac_item["properties"]
