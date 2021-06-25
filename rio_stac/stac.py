@@ -144,7 +144,7 @@ def create_stac_item(
         asset_roles (list of str, optional): list of asset's role.
         asset_media_type (str or pystac.MediaType, optional): asset's media type.
         asset_href (str, optional): asset's URI (default to input path).
-        with_proj (bool): Add the projection extension and properties.
+        with_proj (bool): Add the projection extension and properties (default to False).
 
     Returns:
         pystac.Item: valid STAC Item.
@@ -166,6 +166,7 @@ def create_stac_item(
 
     extensions = extensions or []
 
+    # add projection properties
     if with_proj:
         properties.update(
             {
@@ -189,6 +190,7 @@ def create_stac_item(
         properties=properties,
     )
 
+    # if we add a collection we MUST add a link
     if collection:
         item.add_link(
             pystac.Link(

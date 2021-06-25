@@ -10,17 +10,19 @@ $ rio stac --help
 
 Usage: rio stac [OPTIONS] INPUT
 
-  Rasterio stac cli.
+  Rasterio STAC plugin: Create a STAC Item for raster dataset.
 
 Options:
   -d, --datetime TEXT             The date and time of the assets, in UTC (e.g 2020-01-01, 2020-01-01T01:01:01).
-  -e, --extension TEXT            STAC extensions the Item implements (default is set to ["proj"]). Multiple allowed (e.g. `-e extension1 -e extensio2`).
+  -e, --extension TEXT            STAC extensions the Item implements (default is set to ["proj"]). Multiple allowed (e.g. `-e extensionUrl1 -e extensionUrl2`).
   -c, --collection TEXT           The Collection ID that this item belongs to.
+  --collection-url TEXT           Link to the STAC Collection.
   -p, --property NAME=VALUE       Additional property to add (e.g `-p myprops=1`). Multiple allowed.
   --id TEXT                       Item id.
   -n, --asset-name TEXT           Asset name.
   --asset-href TEXT               Overwrite asset href.
   --asset-mediatype [COG|GEOJSON|GEOPACKAGE|GEOTIFF|HDF|HDF5|JPEG|JPEG2000|JSON|PNG|TEXT|TIFF|XML|auto] Asset media-type.
+  --with-proj / --without-proj    Add the projection extension and properties (default to True).
   -o, --output PATH               Output file name
   --help                          Show this message and exit.
 ```
@@ -39,7 +41,11 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
 
     STAC Item can have [extensions](https://github.com/radiantearth/stac-spec/tree/master/extensions) which indicates that the item has additional properies (e.g proj information). This option can be set multiple times.
 
-    By default the `proj` extension will be added to the item.
+    You can pass the extension option multiple times: `-e extension1 -e extension2`.
+
+- **projection extension** (--with-proj / --without-proj)
+
+    By default the `projection` extension and properties will be added to the item:
     ```
     {
         "proj:epsg": 3857,
@@ -51,19 +57,15 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
     }
     ```
 
-    You can overwrite the default by setting your own list of extensions (e.g `-e extension1 -e extension2`).
-
-    ¡¡¡ important !!!
-
-    To exclude any extension you MUST set: `--extension ""`
-
-    If you want to add extension and still have the `proj` extension enabled, you MUST add it back: `--extension myext --extension proj`
+    You can pass `--without-proj` to disable it.
 
 - **collection** (-c, --collection)
 
     Add a `collection` attribute to the item.
 
-    Note: This won't add the collection's `link`.
+- **collection link** (--collection-url)
+
+    When adding a collection to the Item, the specification state that a Link must also be set. By default the `href` will be set with the collection id. You can specify a custom URL using this option.
 
 - **properties** (-p, --property)
 
