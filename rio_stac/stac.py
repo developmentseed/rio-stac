@@ -215,16 +215,16 @@ def create_stac_item(
     """Create a Stac Item.
 
     Args:
-        source (str or rasterio openned dataset): input path or rasterio dataset.
+        source (str or opened rasterio dataset): input path or rasterio dataset.
         input_datetime (datetime.datetime, optional): datetime associated with the item.
         extensions (list of str): input list of extensions to use in the item.
-        collection (str, optional): collection's name the item belong to.
+        collection (str, optional): name of collection the item belongs to.
         collection_url (str, optional): Link to the STAC Collection.
         properties (dict, optional): additional properties to add in the item.
         id (str, optional): id to assign to the item (default to the source basename).
         assets (dict, optional): Assets to set in the item. If set we won't create one from the source.
         asset_name (str, optional): asset name in the Assets object.
-        asset_roles (list of str, optional): list of asset's role.
+        asset_roles (list of str, optional): list of str | list of asset's roles.
         asset_media_type (str or pystac.MediaType, optional): asset's media type.
         asset_href (str, optional): asset's URI (default to input path).
         with_proj (bool): Add the `projection` extension and properties (default to False).
