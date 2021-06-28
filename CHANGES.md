@@ -3,6 +3,8 @@
 
 * fix validation issue with Collection and extension for STAC 1.0.0
 * add collection_url option to customize the collection link
+* add `raster` extension option (https://github.com/developmentseed/rio-stac/pull/12)
+* set `proj:epsg` value to `None` when no `CRS` is found in the dataset.
 
 **breaking changes**
 
