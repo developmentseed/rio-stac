@@ -3,6 +3,7 @@
 import datetime
 import os
 
+import numpy
 import pystac
 import pytest
 import rasterio
@@ -201,8 +202,7 @@ def test_create_item_raster():
     ]
     assert "raster:bands" in item_dict["properties"]
 
-    # assert numpy.isnan(item_dict["properties"]["raster:bands"][0]["nodata"])
-    assert not item_dict["properties"]["raster:bands"][0]["nodata"]
+    assert numpy.isnan(item_dict["properties"]["raster:bands"][0]["nodata"])
 
     src_path = os.path.join(PREFIX, "dataset_with_offsets.tif")
     item = create_stac_item(src_path, input_datetime=input_date, with_raster=True,)

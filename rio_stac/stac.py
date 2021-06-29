@@ -143,14 +143,8 @@ def get_raster_info(
         }
 
         # If the Nodata is not set we don't forward it.
-        # If the Nodata is not finite (inf, NaN) we set it to None as mentioned
-        # in ECMA-262 (section 24.5.2, JSON.stringify, NOTE 4, page 683 of the ECMA-262 pdf at last edit):
-        # > Finite numbers are stringified as if by calling ToString(number).
-        # > NaN and Infinity regardless of sign are represented as the String null.
         if src_dst.nodata is not None:
-            value["nodata"] = (
-                None if not numpy.isfinite(src_dst.nodata) else src_dst.nodata
-            )
+            value["nodata"] = src_dst.nodata
 
         if src_dst.units[band - 1] is not None:
             value["unit"] = src_dst.units[band - 1]
