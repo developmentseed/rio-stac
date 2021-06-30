@@ -144,7 +144,14 @@ def get_raster_info(
 
         # If the Nodata is not set we don't forward it.
         if src_dst.nodata is not None:
-            value["nodata"] = src_dst.nodata
+            if numpy.isnan(src_dst.nodata):
+                value["nodata"] = "nan"
+            elif src_dst.nodata and numpy.inf:
+                value["nodata"] = "inf"
+            elif src_dst.nodata and -numpy.inf:
+                value["nodata"] = "-inf"
+            else:
+                value["nodata"] = src_dst.nodata
 
         if src_dst.units[band - 1] is not None:
             value["unit"] = src_dst.units[band - 1]
