@@ -1,5 +1,5 @@
 
-## 0.2.0 (TBD)
+## 0.2.0 (2021-07-06)
 
 * fix validation issue with Collection and extension for STAC 1.0.0
 * add collection_url option to customize the collection link
