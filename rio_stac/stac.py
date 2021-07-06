@@ -15,7 +15,7 @@ from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.vrt import WarpedVRT
 
 PROJECTION_EXT_VERSION = "v1.0.0"
-RASTER_EXT_VERSION = "v1.0.0"
+RASTER_EXT_VERSION = "v1.1.0"
 
 
 def bbox_to_geom(bbox: Tuple[float, float, float, float]) -> Dict:

@@ -180,7 +180,7 @@ def test_create_item_raster():
     item_dict = item.to_dict()
     assert item_dict["links"] == []
     assert item_dict["stac_extensions"] == [
-        "https://stac-extensions.github.io/raster/v1.0.0/schema.json",
+        "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
     ]
     assert "raster:bands" in item_dict["properties"]
     assert len(item_dict["properties"]["raster:bands"]) == 1
@@ -197,7 +197,7 @@ def test_create_item_raster():
     assert item.validate()
     item_dict = item.to_dict()
     assert item_dict["stac_extensions"] == [
-        "https://stac-extensions.github.io/raster/v1.0.0/schema.json",
+        "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
     ]
     assert "raster:bands" in item_dict["properties"]
 
@@ -208,7 +208,7 @@ def test_create_item_raster():
     assert item.validate()
     item_dict = item.to_dict()
     assert item_dict["stac_extensions"] == [
-        "https://stac-extensions.github.io/raster/v1.0.0/schema.json",
+        "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
     ]
     assert "raster:bands" in item_dict["properties"]
     assert item_dict["properties"]["raster:bands"][0]["scale"] == 0.0001
