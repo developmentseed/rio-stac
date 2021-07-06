@@ -2,4 +2,4 @@
 
 from rio_stac.stac import create_stac_item  # noqa
 
-__version__ = "0.1.1"
+__version__ = "0.2.0"
