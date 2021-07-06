@@ -1,11 +1,13 @@
 """Create STAC Item from a rasterio dataset."""
 
 import datetime
+import math
 import os
 import warnings
 from contextlib import ExitStack
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import numpy
 import pystac
 import rasterio
 from rasterio import warp
@@ -13,6 +15,7 @@ from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.vrt import WarpedVRT
 
 PROJECTION_EXT_VERSION = "v1.0.0"
+RASTER_EXT_VERSION = "v1.1.0"
 
 
 def bbox_to_geom(bbox: Tuple[float, float, float, float]) -> Dict:
@@ -53,27 +56,114 @@ def get_metadata(
 
     metadata["bbox"] = list(bbox)
     metadata["footprint"] = bbox_to_geom(bbox)
+    return metadata
 
-    # Proj
+
+def get_projection_info(
+    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile]
+) -> Dict:
+    """Get projection metadata.
+
+    see: https://github.com/stac-extensions/projection/#item-properties-or-asset-fields
+
+    """
     try:
         epsg = src_dst.crs.to_epsg() or None
     except AttributeError:
         epsg = None
 
-    metadata["proj"] = {
+    meta = {
         "epsg": epsg,
         "geometry": bbox_to_geom(src_dst.bounds),
         "bbox": list(src_dst.bounds),
         "shape": [src_dst.height, src_dst.width],
         "transform": list(src_dst.transform),
     }
-
     # rasterio can't reproduce wkt2
     # ref: https://github.com/mapbox/rasterio/issues/2044
     # if epsg is None:
-    #      metadata["proj"]["wkt2"] = src_dst.crs.to_wkt()
+    #      meta["wkt2"] = src_dst.crs.to_wkt()
+    return meta
 
-    return metadata
+
+def _get_stats(arr: numpy.ma.array, **kwargs: Any) -> Dict:
+    """Calculate array statistics."""
+    sample, edges = numpy.histogram(arr[~arr.mask])
+    return {
+        "statistics": {
+            "mean": arr.mean().item(),
+            "minimum": arr.min().item(),
+            "maximum": arr.max().item(),
+            "stdev": arr.std().item(),
+            "valid_percent": numpy.count_nonzero(~arr.mask)
+            / float(arr.data.size)
+            * 100,
+        },
+        "histogram": {
+            "count": len(edges),
+            "min": edges.min(),
+            "max": edges.max(),
+            "buckets": sample.tolist(),
+        },
+    }
+
+
+def get_raster_info(
+    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile],
+    max_size: int = 1024,
+) -> List[Dict]:
+    """Get raster metadata.
+
+    see: https://github.com/stac-extensions/raster#raster-band-object
+
+    """
+    height = src_dst.height
+    width = src_dst.width
+    if max_size:
+        if max(width, height) > max_size:
+            ratio = height / width
+            if ratio > 1:
+                height = max_size
+                width = math.ceil(height / ratio)
+            else:
+                width = max_size
+                height = math.ceil(width * ratio)
+
+    meta: List[Dict] = []
+
+    area_or_point = src_dst.tags()["AREA_OR_POINT"].lower()
+
+    # Missing `bits_per_sample` and `spatial_resolution`
+    for band in src_dst.indexes:
+        value = {
+            "sampling": area_or_point,
+            "data_type": src_dst.dtypes[band - 1],
+            "scale": src_dst.scales[band - 1],
+            "offset": src_dst.offsets[band - 1],
+        }
+
+        # If the Nodata is not set we don't forward it.
+        if src_dst.nodata is not None:
+            if numpy.isnan(src_dst.nodata):
+                value["nodata"] = "nan"
+            elif src_dst.nodata and numpy.inf:
+                value["nodata"] = "inf"
+            elif src_dst.nodata and -numpy.inf:
+                value["nodata"] = "-inf"
+            else:
+                value["nodata"] = src_dst.nodata
+
+        if src_dst.units[band - 1] is not None:
+            value["unit"] = src_dst.units[band - 1]
+
+        value.update(
+            _get_stats(
+                src_dst.read(indexes=band, out_shape=(height, width), masked=True)
+            )
+        )
+        meta.append(value)
+
+    return meta
 
 
 def get_media_type(
@@ -128,6 +218,8 @@ def create_stac_item(
     asset_media_type: Optional[Union[str, pystac.MediaType]] = None,
     asset_href: Optional[str] = None,
     with_proj: bool = False,
+    with_raster: bool = False,
+    raster_max_size: int = 1024,
 ) -> pystac.Item:
     """Create a Stac Item.
 
@@ -144,12 +236,17 @@ def create_stac_item(
         asset_roles (list of str, optional): list of str | list of asset's roles.
         asset_media_type (str or pystac.MediaType, optional): asset's media type.
         asset_href (str, optional): asset's URI (default to input path).
-        with_proj (bool): Add the projection extension and properties (default to False).
+        with_proj (bool): Add the `projection` extension and properties (default to False).
+        with_raster (bool): Add the `raster` extension and properties (default to False).
+        raster_max_size (int): Limit array size from which to get the raster statistics, This is used to reduce data transfer. Defaults to 1024.
 
     Returns:
         pystac.Item: valid STAC Item.
 
     """
+    properties = properties or {}
+    extensions = extensions or []
+
     with ExitStack() as ctx:
         if isinstance(source, (DatasetReader, DatasetWriter, WarpedVRT)):
             src_dst = source
@@ -162,22 +259,24 @@ def create_stac_item(
             get_media_type(src_dst) if asset_media_type == "auto" else asset_media_type
         )
 
-    properties = properties or {}
+        # add projection properties
+        if with_proj:
+            properties.update(
+                {
+                    f"proj:{name}": value
+                    for name, value in get_projection_info(src_dst).items()
+                }
+            )
+            extensions.append(
+                f"https://stac-extensions.github.io/projection/{PROJECTION_EXT_VERSION}/schema.json",
+            )
 
-    extensions = extensions or []
-
-    # add projection properties
-    if with_proj:
-        properties.update(
-            {
-                f"proj:{name}": value
-                for name, value in meta["proj"].items()
-                if value is not None
-            }
-        )
-        extensions.append(
-            f"https://stac-extensions.github.io/projection/{PROJECTION_EXT_VERSION}/schema.json",
-        )
+        # add raster properties
+        if with_raster:
+            properties.update({"raster:bands": get_raster_info(src_dst)})
+            extensions.append(
+                f"https://stac-extensions.github.io/raster/{RASTER_EXT_VERSION}/schema.json",
+            )
 
     # item
     item = pystac.Item(

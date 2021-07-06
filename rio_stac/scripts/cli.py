@@ -68,6 +68,11 @@ def _cb_key_val(ctx, param, value):
     default=True,
     help="Add the projection extension and properties (default to True).",
 )
+@click.option(
+    "--with-raster/--without-raster",
+    default=True,
+    help="Add the raster extension and properties (default to True).",
+)
 @click.option("--output", "-o", type=click.Path(exists=False), help="Output file name")
 def stac(
     input,
@@ -81,6 +86,7 @@ def stac(
     asset_href,
     asset_mediatype,
     with_proj,
+    with_raster,
     output,
 ):
     """Rasterio STAC plugin: Create a STAC Item for raster dataset."""
@@ -116,6 +122,7 @@ def stac(
         asset_href=asset_href,
         asset_media_type=asset_mediatype,
         with_proj=with_proj,
+        with_raster=with_raster,
     )
 
     if output:

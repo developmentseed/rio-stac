@@ -149,3 +149,67 @@ def test_create_item_options():
     assert item_dict["stac_extensions"] == []
     assert "datetime" in item_dict["properties"]
     assert item_dict["collection"] == "mycollection"
+
+
+def test_proj_without_proj():
+    """Use the Proj extension without proj info."""
+    src_path = os.path.join(PREFIX, "dataset.tif")
+
+    # additional extensions and properties
+    item = create_stac_item(src_path, input_datetime=input_date, with_proj=True,)
+    assert item.validate()
+    item_dict = item.to_dict()
+    assert "type" not in item_dict["assets"]["asset"]
+    assert item_dict["links"] == []
+    assert item_dict["stac_extensions"] == [
+        "https://stac-extensions.github.io/projection/v1.0.0/schema.json",
+    ]
+    assert "datetime" in item_dict["properties"]
+    # EPSG should be set to None
+    assert not item_dict["properties"]["proj:epsg"]
+    assert item_dict["properties"]["proj:bbox"]
+
+
+def test_create_item_raster():
+    """Should return a valid item with raster properties."""
+    src_path = os.path.join(PREFIX, "dataset_cog.tif")
+    item = create_stac_item(
+        src_path, input_datetime=input_date, with_raster=True, raster_max_size=128,
+    )
+    assert item.validate()
+    item_dict = item.to_dict()
+    assert item_dict["links"] == []
+    assert item_dict["stac_extensions"] == [
+        "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
+    ]
+    assert "raster:bands" in item_dict["properties"]
+    assert len(item_dict["properties"]["raster:bands"]) == 1
+    # Nodata=None not in the properties
+    assert "nodata" not in item_dict["properties"]["raster:bands"][0]
+
+    # Unit=None not in the properties
+    assert "unit" not in item_dict["properties"]["raster:bands"][0]
+
+    assert item_dict["properties"]["raster:bands"][0]["sampling"] in ["point", "area"]
+
+    src_path = os.path.join(PREFIX, "dataset_nodata_nan.tif")
+    item = create_stac_item(src_path, input_datetime=input_date, with_raster=True)
+    assert item.validate()
+    item_dict = item.to_dict()
+    assert item_dict["stac_extensions"] == [
+        "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
+    ]
+    assert "raster:bands" in item_dict["properties"]
+
+    assert item_dict["properties"]["raster:bands"][0]["nodata"] == "nan"
+
+    src_path = os.path.join(PREFIX, "dataset_with_offsets.tif")
+    item = create_stac_item(src_path, input_datetime=input_date, with_raster=True,)
+    assert item.validate()
+    item_dict = item.to_dict()
+    assert item_dict["stac_extensions"] == [
+        "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
+    ]
+    assert "raster:bands" in item_dict["properties"]
+    assert item_dict["properties"]["raster:bands"][0]["scale"] == 0.0001
+    assert item_dict["properties"]["raster:bands"][0]["offset"] == 1000.0
