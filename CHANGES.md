@@ -1,4 +1,8 @@
 
+## 0.2.1 (2021-08-24)
+
+* use WarpedVRT for data with internal GCPS
+
 ## 0.2.0 (2021-07-06)
 
 * fix validation issue with Collection and extension for STAC 1.0.0

@@ -26,13 +26,16 @@ input_date = datetime.datetime.utcnow()
         "dataset.jpg",
         "dataset.png",
         "dataset.webp",
+        "dataset_gcps.tif",
     ],
 )
 def test_create_item(file):
     """Should run without exceptions."""
     src_path = os.path.join(PREFIX, file)
     with rasterio.open(src_path) as src_dst:
-        assert create_stac_item(src_dst, input_datetime=input_date).validate()
+        assert create_stac_item(
+            src_dst, input_datetime=input_date, with_raster=True
+        ).validate()
 
 
 @requires_hdf4
@@ -213,3 +216,12 @@ def test_create_item_raster():
     assert "raster:bands" in item_dict["properties"]
     assert item_dict["properties"]["raster:bands"][0]["scale"] == 0.0001
     assert item_dict["properties"]["raster:bands"][0]["offset"] == 1000.0
+
+
+def test_create_item_raster_with_gcps():
+    """Should return a valid item with raster properties."""
+    src_path = os.path.join(PREFIX, "dataset_gcps.tif")
+    item = create_stac_item(
+        src_path, input_datetime=input_date, with_raster=True, with_proj=True
+    )
+    assert item.validate()

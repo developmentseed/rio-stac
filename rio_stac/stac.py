@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy
 import pystac
 import rasterio
-from rasterio import warp
+from rasterio import transform, warp
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.vrt import WarpedVRT
 
@@ -40,8 +40,6 @@ def get_metadata(
 ) -> Dict:
     """Get Raster Metadata."""
     metadata: Dict[str, Any] = {}
-
-    metadata["name"] = src_dst.name
 
     # To Do: handle non-geo data
     if src_dst.crs is not None:
@@ -131,16 +129,17 @@ def get_raster_info(
 
     meta: List[Dict] = []
 
-    area_or_point = src_dst.tags()["AREA_OR_POINT"].lower()
+    area_or_point = src_dst.tags().get("AREA_OR_POINT", "").lower()
 
     # Missing `bits_per_sample` and `spatial_resolution`
     for band in src_dst.indexes:
         value = {
-            "sampling": area_or_point,
             "data_type": src_dst.dtypes[band - 1],
             "scale": src_dst.scales[band - 1],
             "offset": src_dst.offsets[band - 1],
         }
+        if area_or_point:
+            value["sampling"] = area_or_point
 
         # If the Nodata is not set we don't forward it.
         if src_dst.nodata is not None:
@@ -249,14 +248,25 @@ def create_stac_item(
 
     with ExitStack() as ctx:
         if isinstance(source, (DatasetReader, DatasetWriter, WarpedVRT)):
-            src_dst = source
+            dataset = source
         else:
-            src_dst = ctx.enter_context(rasterio.open(source))
+            dataset = ctx.enter_context(rasterio.open(source))
+
+        if dataset.gcps[0]:
+            src_dst = ctx.enter_context(
+                WarpedVRT(
+                    dataset,
+                    src_crs=dataset.gcps[1],
+                    src_transform=transform.from_gcps(dataset.gcps[0]),
+                )
+            )
+        else:
+            src_dst = dataset
 
         meta = get_metadata(src_dst)
 
         media_type = (
-            get_media_type(src_dst) if asset_media_type == "auto" else asset_media_type
+            get_media_type(dataset) if asset_media_type == "auto" else asset_media_type
         )
 
         # add projection properties
@@ -273,14 +283,14 @@ def create_stac_item(
 
         # add raster properties
         if with_raster:
-            properties.update({"raster:bands": get_raster_info(src_dst)})
+            properties.update({"raster:bands": get_raster_info(dataset)})
             extensions.append(
                 f"https://stac-extensions.github.io/raster/{RASTER_EXT_VERSION}/schema.json",
             )
 
     # item
     item = pystac.Item(
-        id=id or os.path.basename(meta["name"]),
+        id=id or os.path.basename(dataset.name),
         geometry=meta["footprint"],
         bbox=meta["bbox"],
         collection=collection,
@@ -309,7 +319,7 @@ def create_stac_item(
     else:
         item.add_asset(
             key=asset_name,
-            asset=pystac.Asset(href=asset_href or meta["name"], media_type=media_type),
+            asset=pystac.Asset(href=asset_href or dataset.name, media_type=media_type),
         )
 
     return item
