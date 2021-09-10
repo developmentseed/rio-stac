@@ -19,7 +19,7 @@ extra_reqs = {
 
 setup(
     name="rio-stac",
-    version="0.2.1",
+    version="0.3.0",
     description="Create STAC Items from raster datasets.",
     long_description=long_description,
     long_description_content_type="text/markdown",
