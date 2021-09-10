@@ -28,7 +28,7 @@ def test_rio_stac_cli(runner):
         ]
         assert "datetime" in stac_item["properties"]
         assert "proj:epsg" in stac_item["properties"]
-        assert "raster:bands" in stac_item["properties"]
+        assert "raster:bands" in stac_item["assets"]["asset"]
 
         result = runner.invoke(
             stac,
@@ -105,4 +105,4 @@ def test_rio_stac_cli(runner):
         ]
         assert "datetime" in stac_item["properties"]
         assert "proj:epsg" in stac_item["properties"]
-        assert "raster:bands" in stac_item["properties"]
+        assert "raster:bands" in stac_item["assets"]["asset"]
