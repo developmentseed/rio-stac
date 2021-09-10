@@ -1,9 +1,10 @@
 
-## 0.2.2 (2021-09-10)
+## 0.3.0 (2021-09-10)
 
 * Move `raster:bands` information in assets (not in properties).
 * update pystac version
 * fix typo for `stddev` raster information
+* drop support of python 3.6 (pystac 1.0.0 dropped support of python 3.6)
 
 ## 0.2.1 (2021-08-24)
 
