@@ -148,27 +148,6 @@ $ rio stac raster.tif | jq
     "proj:bbox": [..],
     "proj:shape": [8192, 8192],
     "proj:transform": [...],
-    "raster:bands": [
-      {
-        "sampling": "point",
-        "data_type": "uint16",
-        "scale": 1,
-        "offset": 0,
-        "statistics": {
-          "mean": 2107.524612053134,
-          "minimum": 1,
-          "maximum": 7872,
-          "stdev": 2271.0065537857326,
-          "valid_percent": 9.564764936336924e-05
-        },
-        "histogram": {
-          "count": 11,
-          "min": 1,
-          "max": 7872,
-          "buckets": [503460, 0, 0, 161792, 283094, 0, 0, 0, 87727, 9431]
-        }
-      }
-    ],
     "datetime": "2021-03-19T02:27:33.266356Z"
   },
   "geometry": {
@@ -178,7 +157,28 @@ $ rio stac raster.tif | jq
   "links": [],
   "assets": {
     "asset": {
-      "href": "raster.tif"
+      "href": "raster.tif",
+      "raster:bands": [
+        {
+          "sampling": "point",
+          "data_type": "uint16",
+          "scale": 1,
+          "offset": 0,
+          "statistics": {
+            "mean": 2107.524612053134,
+            "minimum": 1,
+            "maximum": 7872,
+            "stdev": 2271.0065537857326,
+            "valid_percent": 9.564764936336924e-05
+          },
+          "histogram": {
+            "count": 11,
+            "min": 1,
+            "max": 7872,
+            "buckets": [503460, 0, 0, 161792, 283094, 0, 0, 0, 87727, 9431]
+          }
+        }
+      ],
     }
   },
   "bbox": [...],
@@ -254,98 +254,6 @@ $ rio stac S-2_20200422_COG.tif \
       0,
       1
     ],
-    "raster:bands": [
-      {
-        "sampling": "area",
-        "data_type": "uint8",
-        "scale": 1,
-        "offset": 0,
-        "statistics": {
-          "mean": 70.14680057905686,
-          "minimum": 0,
-          "maximum": 255,
-          "stdev": 36.47197403839734,
-          "valid_percent": 49.83785997057175
-        },
-        "histogram": {
-          "count": 11,
-          "min": 0,
-          "max": 255,
-          "buckets": [
-            21135,
-            129816,
-            152194,
-            76363,
-            39423,
-            20046,
-            10272,
-            3285,
-            1115,
-            1574
-          ]
-        }
-      },
-      {
-        "sampling": "area",
-        "data_type": "uint8",
-        "scale": 1,
-        "offset": 0,
-        "statistics": {
-          "mean": 70.72913714816694,
-          "minimum": 0,
-          "maximum": 255,
-          "stdev": 34.031434334640124,
-          "valid_percent": 49.83785997057175
-        },
-        "histogram": {
-          "count": 11,
-          "min": 0,
-          "max": 255,
-          "buckets": [
-            14829,
-            116732,
-            171933,
-            81023,
-            38736,
-            18977,
-            8362,
-            2259,
-            918,
-            1454
-          ]
-        }
-      },
-      {
-        "sampling": "area",
-        "data_type": "uint8",
-        "scale": 1,
-        "offset": 0,
-        "statistics": {
-          "mean": 47.96346845392258,
-          "minimum": 0,
-          "maximum": 255,
-          "stdev": 32.447819767110225,
-          "valid_percent": 49.83785997057175
-        },
-        "histogram": {
-          "count": 11,
-          "min": 0,
-          "max": 255,
-          "buckets": [
-            110478,
-            177673,
-            93767,
-            41101,
-            20804,
-            7117,
-            1939,
-            856,
-            829,
-            659
-          ]
-        }
-      }
-    ],
     "datetime": "2020-04-22T00:00:00Z"
   },
   "geometry": {
@@ -385,7 +293,99 @@ $ rio stac S-2_20200422_COG.tif \
   "assets": {
     "mosaic": {
       "href": "https://somewhere.overtherainbow.io/S-2_20200422_COG.tif",
-      "type": "image/tiff; application=geotiff; profile=cloud-optimized"
+      "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+      "raster:bands": [
+        {
+          "sampling": "area",
+          "data_type": "uint8",
+          "scale": 1,
+          "offset": 0,
+          "statistics": {
+            "mean": 70.14680057905686,
+            "minimum": 0,
+            "maximum": 255,
+            "stdev": 36.47197403839734,
+            "valid_percent": 49.83785997057175
+          },
+          "histogram": {
+            "count": 11,
+            "min": 0,
+            "max": 255,
+            "buckets": [
+              21135,
+              129816,
+              152194,
+              76363,
+              39423,
+              20046,
+              10272,
+              3285,
+              1115,
+              1574
+            ]
+          }
+        },
+        {
+          "sampling": "area",
+          "data_type": "uint8",
+          "scale": 1,
+          "offset": 0,
+          "statistics": {
+            "mean": 70.72913714816694,
+            "minimum": 0,
+            "maximum": 255,
+            "stdev": 34.031434334640124,
+            "valid_percent": 49.83785997057175
+          },
+          "histogram": {
+            "count": 11,
+            "min": 0,
+            "max": 255,
+            "buckets": [
+              14829,
+              116732,
+              171933,
+              81023,
+              38736,
+              18977,
+              8362,
+              2259,
+              918,
+              1454
+            ]
+          }
+        },
+        {
+          "sampling": "area",
+          "data_type": "uint8",
+          "scale": 1,
+          "offset": 0,
+          "statistics": {
+            "mean": 47.96346845392258,
+            "minimum": 0,
+            "maximum": 255,
+            "stdev": 32.447819767110225,
+            "valid_percent": 49.83785997057175
+          },
+          "histogram": {
+            "count": 11,
+            "min": 0,
+            "max": 255,
+            "buckets": [
+              110478,
+              177673,
+              93767,
+              41101,
+              20804,
+              7117,
+              1939,
+              856,
+              829,
+              659
+            ]
+          }
+        }
+      ],
     }
   },
   "bbox": [

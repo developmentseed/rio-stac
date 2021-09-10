@@ -92,7 +92,7 @@ def _get_stats(arr: numpy.ma.array, **kwargs: Any) -> Dict:
             "mean": arr.mean().item(),
             "minimum": arr.min().item(),
             "maximum": arr.max().item(),
-            "stdev": arr.std().item(),
+            "stddev": arr.std().item(),
             "valid_percent": numpy.count_nonzero(~arr.mask)
             / float(arr.data.size)
             * 100,
@@ -282,8 +282,9 @@ def create_stac_item(
             )
 
         # add raster properties
+        raster_info = {}
         if with_raster:
-            properties.update({"raster:bands": get_raster_info(dataset)})
+            raster_info = {"raster:bands": get_raster_info(dataset)}
             extensions.append(
                 f"https://stac-extensions.github.io/raster/{RASTER_EXT_VERSION}/schema.json",
             )
@@ -319,7 +320,11 @@ def create_stac_item(
     else:
         item.add_asset(
             key=asset_name,
-            asset=pystac.Asset(href=asset_href or dataset.name, media_type=media_type),
+            asset=pystac.Asset(
+                href=asset_href or dataset.name,
+                media_type=media_type,
+                extra_fields=raster_info,
+            ),
         )
 
     return item

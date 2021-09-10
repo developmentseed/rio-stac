@@ -185,15 +185,19 @@ def test_create_item_raster():
     assert item_dict["stac_extensions"] == [
         "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
     ]
-    assert "raster:bands" in item_dict["properties"]
-    assert len(item_dict["properties"]["raster:bands"]) == 1
+    assert "raster:bands" in item_dict["assets"]["asset"]
+    assert len(item_dict["assets"]["asset"]["raster:bands"]) == 1
+
     # Nodata=None not in the properties
-    assert "nodata" not in item_dict["properties"]["raster:bands"][0]
+    assert "nodata" not in item_dict["assets"]["asset"]["raster:bands"][0]
 
     # Unit=None not in the properties
-    assert "unit" not in item_dict["properties"]["raster:bands"][0]
+    assert "unit" not in item_dict["assets"]["asset"]["raster:bands"][0]
 
-    assert item_dict["properties"]["raster:bands"][0]["sampling"] in ["point", "area"]
+    assert item_dict["assets"]["asset"]["raster:bands"][0]["sampling"] in [
+        "point",
+        "area",
+    ]
 
     src_path = os.path.join(PREFIX, "dataset_nodata_nan.tif")
     item = create_stac_item(src_path, input_datetime=input_date, with_raster=True)
@@ -202,9 +206,9 @@ def test_create_item_raster():
     assert item_dict["stac_extensions"] == [
         "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
     ]
-    assert "raster:bands" in item_dict["properties"]
+    assert "raster:bands" in item_dict["assets"]["asset"]
 
-    assert item_dict["properties"]["raster:bands"][0]["nodata"] == "nan"
+    assert item_dict["assets"]["asset"]["raster:bands"][0]["nodata"] == "nan"
 
     src_path = os.path.join(PREFIX, "dataset_with_offsets.tif")
     item = create_stac_item(src_path, input_datetime=input_date, with_raster=True,)
@@ -213,9 +217,9 @@ def test_create_item_raster():
     assert item_dict["stac_extensions"] == [
         "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
     ]
-    assert "raster:bands" in item_dict["properties"]
-    assert item_dict["properties"]["raster:bands"][0]["scale"] == 0.0001
-    assert item_dict["properties"]["raster:bands"][0]["offset"] == 1000.0
+    assert "raster:bands" in item_dict["assets"]["asset"]
+    assert item_dict["assets"]["asset"]["raster:bands"][0]["scale"] == 0.0001
+    assert item_dict["assets"]["asset"]["raster:bands"][0]["offset"] == 1000.0
 
 
 def test_create_item_raster_with_gcps():
