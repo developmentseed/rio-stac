@@ -1,3 +1,6 @@
+## 0.3.1 (2021-10-07)
+
+* update `pystac` requirement to allow up to `<2.0` (author @alexgleith, https://github.com/developmentseed/rio-stac/pull/20)
 
 ## 0.3.0 (2021-09-10)
 
