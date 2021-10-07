@@ -7,7 +7,7 @@ with open("README.md") as f:
 
 inst_reqs = [
     "rasterio",
-    "pystac>=1.0.0,<1.1.0",
+    "pystac>=1.0.0",
 ]
 
 extra_reqs = {
