@@ -99,8 +99,8 @@ def _get_stats(arr: numpy.ma.array, **kwargs: Any) -> Dict:
         },
         "histogram": {
             "count": len(edges),
-            "min": edges.min(),
-            "max": edges.max(),
+            "min": float(edges.min()),
+            "max": float(edges.max()),
             "buckets": sample.tolist(),
         },
     }

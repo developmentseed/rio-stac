@@ -27,6 +27,7 @@ input_date = datetime.datetime.utcnow()
         "dataset.png",
         "dataset.webp",
         "dataset_gcps.tif",
+        "issue_22.tif",
     ],
 )
 def test_create_item(file):
