@@ -213,7 +213,7 @@ def create_stac_item(
     id: Optional[str] = None,
     assets: Optional[Dict[str, pystac.Asset]] = None,
     asset_name: str = "asset",
-    asset_roles: Optional[List[str]] = None,
+    asset_roles: Optional[List[str]] = [],
     asset_media_type: Optional[Union[str, pystac.MediaType]] = None,
     asset_href: Optional[str] = None,
     with_proj: bool = False,
@@ -237,7 +237,7 @@ def create_stac_item(
         asset_href (str, optional): asset's URI (default to input path).
         with_proj (bool): Add the `projection` extension and properties (default to False).
         with_raster (bool): Add the `raster` extension and properties (default to False).
-        raster_max_size (int): Limit array size from which to get the raster statistics, This is used to reduce data transfer. Defaults to 1024.
+        raster_max_size (int): Limit array size from which to get the raster statistics. Defaults to 1024.
 
     Returns:
         pystac.Item: valid STAC Item.
@@ -284,7 +284,9 @@ def create_stac_item(
         # add raster properties
         raster_info = {}
         if with_raster:
-            raster_info = {"raster:bands": get_raster_info(dataset)}
+            raster_info = {
+                "raster:bands": get_raster_info(dataset, max_size=raster_max_size)
+            }
             extensions.append(
                 f"https://stac-extensions.github.io/raster/{RASTER_EXT_VERSION}/schema.json",
             )
@@ -316,7 +318,6 @@ def create_stac_item(
             item.add_asset(
                 key=key, asset=asset,
             )
-
     else:
         item.add_asset(
             key=asset_name,
@@ -324,6 +325,7 @@ def create_stac_item(
                 href=asset_href or dataset.name,
                 media_type=media_type,
                 extra_fields=raster_info,
+                roles=asset_roles,
             ),
         )
 
