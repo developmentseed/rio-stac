@@ -1,3 +1,9 @@
+## 0.3.2 (2021-10-29)
+
+**bug fixes**
+* Use the raster_max_size and asset_roles arguments in create_stac_item (author @alexgleith, https://github.com/developmentseed/rio-stac/pull/23)
+* Fix json serialisation by converting numpy float32 to float (author @alexgleith, https://github.com/developmentseed/rio-stac/pull/24)
+
 ## 0.3.1 (2021-10-07)
 
 * update `pystac` requirement to allow up to `<2.0` (author @alexgleith, https://github.com/developmentseed/rio-stac/pull/20)
