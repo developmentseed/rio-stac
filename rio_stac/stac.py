@@ -21,7 +21,6 @@ RASTER_EXT_VERSION = "v1.1.0"
 
 def bbox_to_geom(bbox: Tuple[float, float, float, float]) -> Dict:
     """Return a geojson geometry from a bbox."""
-    # TODO: Handle dateline crossing geometry
     return {
         "type": "Polygon",
         "coordinates": [
