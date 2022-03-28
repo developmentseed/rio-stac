@@ -25,11 +25,11 @@ def bbox_to_geom(bbox: Tuple[float, float, float, float]) -> Dict:
         "type": "Polygon",
         "coordinates": [
             [
-                [bbox[0], bbox[3]],
                 [bbox[0], bbox[1]],
                 [bbox[2], bbox[1]],
                 [bbox[2], bbox[3]],
                 [bbox[0], bbox[3]],
+                [bbox[0], bbox[1]],
             ]
         ],
     }
