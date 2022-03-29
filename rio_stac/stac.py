@@ -11,6 +11,7 @@ import numpy
 import pystac
 import rasterio
 from rasterio import transform, warp
+from rasterio.features import bounds as feature_bounds
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.vrt import WarpedVRT
 
@@ -20,16 +21,15 @@ RASTER_EXT_VERSION = "v1.1.0"
 
 def bbox_to_geom(bbox: Tuple[float, float, float, float]) -> Dict:
     """Return a geojson geometry from a bbox."""
-    # TODO: Handle dateline crossing geometry
     return {
         "type": "Polygon",
         "coordinates": [
             [
-                [bbox[0], bbox[3]],
                 [bbox[0], bbox[1]],
                 [bbox[2], bbox[1]],
                 [bbox[2], bbox[3]],
                 [bbox[0], bbox[3]],
+                [bbox[0], bbox[1]],
             ]
         ],
     }
@@ -41,19 +41,19 @@ def get_metadata(
     """Get Raster Metadata."""
     metadata: Dict[str, Any] = {}
 
-    # To Do: handle non-geo data
     if src_dst.crs is not None:
-        bbox = warp.transform_bounds(
-            src_dst.crs, "epsg:4326", *src_dst.bounds, densify_pts=21
-        )
+        src_geom = bbox_to_geom(src_dst.bounds)
+        geom = warp.transform_geom(src_dst.crs, "epsg:4326", src_geom)
+        bbox = feature_bounds(geom)
     else:
         warnings.warn(
             "Input file doesn't have geom information, setting bbox to (-180,-90,180,90)."
         )
-        bbox = [-180.0, -90.0, 180.0, 90.0]
+        bbox = (-180.0, -90.0, 180.0, 90.0)
+        geom = bbox_to_geom(bbox)
 
     metadata["bbox"] = list(bbox)
-    metadata["footprint"] = bbox_to_geom(bbox)
+    metadata["footprint"] = geom
     return metadata
 
 
@@ -84,7 +84,7 @@ def get_projection_info(
     return meta
 
 
-def _get_stats(arr: numpy.ma.array, **kwargs: Any) -> Dict:
+def _get_stats(arr: numpy.ma.MaskedArray, **kwargs: Any) -> Dict:
     """Calculate array statistics."""
     sample, edges = numpy.histogram(arr[~arr.mask])
     return {

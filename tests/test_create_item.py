@@ -28,6 +28,7 @@ input_date = datetime.datetime.utcnow()
         "dataset.webp",
         "dataset_gcps.tif",
         "issue_22.tif",
+        "dataset_dateline.tif",
     ],
 )
 def test_create_item(file):
@@ -230,3 +231,13 @@ def test_create_item_raster_with_gcps():
         src_path, input_datetime=input_date, with_raster=True, with_proj=True
     )
     assert item.validate()
+
+
+def test_dateline_polygon_split():
+    """make sure we return a multipolygon."""
+    src_path = os.path.join(PREFIX, "dataset_dateline.tif")
+    item = create_stac_item(
+        src_path, input_datetime=input_date, with_raster=True, with_proj=True
+    )
+    item_dict = item.to_dict()
+    assert item_dict["geometry"]["type"] == "MultiPolygon"
