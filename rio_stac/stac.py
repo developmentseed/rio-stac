@@ -316,7 +316,8 @@ def create_stac_item(
     if assets:
         for key, asset in assets.items():
             item.add_asset(
-                key=key, asset=asset,
+                key=key,
+                asset=asset,
             )
     else:
         item.add_asset(

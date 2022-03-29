@@ -33,7 +33,7 @@ setup(
         "Programming Language :: Python :: 3.9",
     ],
     keywords="COG STAC rasterio",
-    author=u"Vincent Sarago",
+    author="Vincent Sarago",
     author_email="vincent@developmentseed.org",
     url="https://github.com/developmentseed/rio-stac",
     license="MIT",

@@ -161,7 +161,11 @@ def test_proj_without_proj():
     src_path = os.path.join(PREFIX, "dataset.tif")
 
     # additional extensions and properties
-    item = create_stac_item(src_path, input_datetime=input_date, with_proj=True,)
+    item = create_stac_item(
+        src_path,
+        input_datetime=input_date,
+        with_proj=True,
+    )
     assert item.validate()
     item_dict = item.to_dict()
     assert "type" not in item_dict["assets"]["asset"]
@@ -179,7 +183,10 @@ def test_create_item_raster():
     """Should return a valid item with raster properties."""
     src_path = os.path.join(PREFIX, "dataset_cog.tif")
     item = create_stac_item(
-        src_path, input_datetime=input_date, with_raster=True, raster_max_size=128,
+        src_path,
+        input_datetime=input_date,
+        with_raster=True,
+        raster_max_size=128,
     )
     assert item.validate()
     item_dict = item.to_dict()
@@ -213,7 +220,11 @@ def test_create_item_raster():
     assert item_dict["assets"]["asset"]["raster:bands"][0]["nodata"] == "nan"
 
     src_path = os.path.join(PREFIX, "dataset_with_offsets.tif")
-    item = create_stac_item(src_path, input_datetime=input_date, with_raster=True,)
+    item = create_stac_item(
+        src_path,
+        input_datetime=input_date,
+        with_raster=True,
+    )
     assert item.validate()
     item_dict = item.to_dict()
     assert item_dict["stac_extensions"] == [
