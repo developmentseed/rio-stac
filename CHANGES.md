@@ -1,4 +1,4 @@
-## 0.4.0 (TBD)
+## 0.4.0 (2022-03-29)
 
 * Switch to `pyproject.toml` to simplify setup.
 
