@@ -1,3 +1,12 @@
+## 0.4.0 (TBD)
+
+* Switch to `pyproject.toml` to simplify setup.
+
+**bug fixes**
+
+* Split geometry to MultiPolygon for dataset crossing the dataline separation (https://github.com/developmentseed/rio-stac/pull/30)
+* Use correct coordinates order for Polygon (ref https://github.com/developmentseed/geojson-pydantic/pull/49)
+
 ## 0.3.2 (2021-10-29)
 
 **bug fixes**

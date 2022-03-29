@@ -7,7 +7,7 @@ Issues and pull requests are more than welcome.
 ```bash
 $ git clone https://github.com/developmentseed/rio-stac.git
 $ cd rio-stac
-$ pip install -e .[dev]
+$ pip install -e .["test","dev"]
 ```
 
 **pre-commit**
@@ -23,13 +23,13 @@ $ pre-commit install
 ```bash
 $ git clone https://github.com/developmentseed/rio-stac.git
 $ cd rio-stac
-$ pip install -e .["docs"]
+$ pip install -e .["doc"]
 ```
 
 Create API docs
 
 ```bash
-$ pdocs as_markdown --output_dir docs/api/ --exclude_source --overwrite rio_stac.stac
+$ pdocs as_markdown --output_dir docs/docs/api/ --exclude_source --overwrite rio_stac.stac
 ```
 
 Hot-reloading docs:
@@ -42,6 +42,5 @@ To manually deploy docs (note you should never need to do this because Github
 Actions deploys automatically for new commits.):
 
 ```bash
-$ mkdocs gh-deploy
+$ mkdocs gh-deploy -f docs/mkdocs.yml
 ```
-
