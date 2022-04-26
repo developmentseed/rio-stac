@@ -1,3 +1,7 @@
+## 0.4.1 (2022-04-26)
+
+* handle `nan/inf` values to avoid `numpy.histogram` issue (https://github.com/developmentseed/rio-stac/pull/32)
+
 ## 0.4.0 (2022-03-29)
 
 * Switch to `pyproject.toml` to simplify setup.

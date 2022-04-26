@@ -18,6 +18,8 @@ input_date = datetime.datetime.utcnow()
 @pytest.mark.parametrize(
     "file",
     [
+        "dataset_nodata_nan.tif",
+        "dataset_nodata_and_nan.tif",
         "dataset_cog.tif",
         "dataset_gdalcog.tif",
         "dataset_geo.tif",
