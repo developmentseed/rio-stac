@@ -86,6 +86,8 @@ def get_projection_info(
 
 def _get_stats(arr: numpy.ma.MaskedArray, **kwargs: Any) -> Dict:
     """Calculate array statistics."""
+    # Avoid non masked nan/inf values
+    numpy.ma.fix_invalid(arr, copy=False)
     sample, edges = numpy.histogram(arr[~arr.mask])
     return {
         "statistics": {
