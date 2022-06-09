@@ -31,6 +31,7 @@ input_date = datetime.datetime.utcnow()
         "dataset_gcps.tif",
         "issue_22.tif",
         "dataset_dateline.tif",
+        "dataset_int16_nodata.tif",
     ],
 )
 def test_create_item(file):
@@ -254,3 +255,13 @@ def test_dateline_polygon_split():
     )
     item_dict = item.to_dict()
     assert item_dict["geometry"]["type"] == "MultiPolygon"
+
+
+def test_negative_nodata():
+    """Make sure we catch valid nodata (issue 33)."""
+    src_path = os.path.join(PREFIX, "dataset_int16_nodata.tif")
+    item = create_stac_item(
+        src_path, input_datetime=input_date, with_raster=True, with_proj=True
+    )
+    item_dict = item.to_dict()
+    assert item_dict["assets"]["asset"]["raster:bands"][0]["nodata"] == -9999
