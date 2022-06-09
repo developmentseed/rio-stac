@@ -147,9 +147,9 @@ def get_raster_info(
         if src_dst.nodata is not None:
             if numpy.isnan(src_dst.nodata):
                 value["nodata"] = "nan"
-            elif src_dst.nodata and numpy.inf:
+            elif numpy.isposinf(src_dst.nodata):
                 value["nodata"] = "inf"
-            elif src_dst.nodata and -numpy.inf:
+            elif numpy.isneginf(src_dst.nodata):
                 value["nodata"] = "-inf"
             else:
                 value["nodata"] = src_dst.nodata
