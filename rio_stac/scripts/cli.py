@@ -73,19 +73,19 @@ def _cb_key_val(ctx, param, value):
 @click.option(
     "--with-proj/--without-proj",
     default=True,
-    help="Add the 'projection' extension and properties (default to True).",
+    help="Add the 'projection' extension and properties.",
     show_default=True,
 )
 @click.option(
     "--with-raster/--without-raster",
     default=True,
-    help="Add the 'raster' extension and properties (default to True).",
+    help="Add the 'raster' extension and properties.",
     show_default=True,
 )
 @click.option(
     "--with-eo/--without-eo",
     default=True,
-    help="Add the 'eo' extension and properties (default to True).",
+    help="Add the 'eo' extension and properties.",
     show_default=True,
 )
 @click.option("--output", "-o", type=click.Path(exists=False), help="Output file name")
