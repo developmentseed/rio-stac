@@ -25,10 +25,12 @@ def test_rio_stac_cli(runner):
         assert stac_item["stac_extensions"] == [
             "https://stac-extensions.github.io/projection/v1.0.0/schema.json",
             "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
+            "https://stac-extensions.github.io/eo/v1.0.0/schema.json",
         ]
         assert "datetime" in stac_item["properties"]
         assert "proj:epsg" in stac_item["properties"]
         assert "raster:bands" in stac_item["assets"]["asset"]
+        assert "eo:bands" in stac_item["assets"]["asset"]
 
         result = runner.invoke(
             stac,
@@ -36,6 +38,7 @@ def test_rio_stac_cli(runner):
                 src_path,
                 "--without-proj",
                 "--without-raster",
+                "--without-eo",
                 "--datetime",
                 "2010-01-01",
                 "--id",
@@ -56,6 +59,7 @@ def test_rio_stac_cli(runner):
                 src_path,
                 "--without-proj",
                 "--without-raster",
+                "--without-eo",
                 "--datetime",
                 "2010-01-01/2010-01-02",
             ],
@@ -102,6 +106,7 @@ def test_rio_stac_cli(runner):
         assert stac_item["stac_extensions"] == [
             "https://stac-extensions.github.io/projection/v1.0.0/schema.json",
             "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
+            "https://stac-extensions.github.io/eo/v1.0.0/schema.json",
         ]
         assert "datetime" in stac_item["properties"]
         assert "proj:epsg" in stac_item["properties"]

@@ -265,3 +265,49 @@ def test_negative_nodata():
     )
     item_dict = item.to_dict()
     assert item_dict["assets"]["asset"]["raster:bands"][0]["nodata"] == -9999
+
+
+def test_create_item_eo():
+    """Should return a valid item with eo properties."""
+    src_path = os.path.join(PREFIX, "dataset_cog.tif")
+    item = create_stac_item(src_path, with_eo=True)
+    assert item.validate()
+    item_dict = item.to_dict()
+    assert item_dict["links"] == []
+    assert item_dict["stac_extensions"] == [
+        "https://stac-extensions.github.io/eo/v1.0.0/schema.json",
+    ]
+    assert "eo:bands" in item_dict["assets"]["asset"]
+    assert len(item_dict["assets"]["asset"]["eo:bands"]) == 1
+    assert item_dict["assets"]["asset"]["eo:bands"][0] == {
+        "name": "b1",
+        "description": "gray",
+    }
+
+    src_path = os.path.join(PREFIX, "dataset_description.tif")
+    item = create_stac_item(src_path, with_eo=True)
+    assert item.validate()
+    item_dict = item.to_dict()
+    assert len(item_dict["assets"]["asset"]["eo:bands"]) == 1
+
+    assert item_dict["assets"]["asset"]["eo:bands"][0] == {
+        "name": "b1",
+        "description": "b1",
+    }
+
+    with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="FALSE"):
+        src_path = os.path.join(PREFIX, "dataset_cloud_date_metadata.tif")
+        item = create_stac_item(src_path, with_eo=True)
+    assert item.validate()
+    item_dict = item.to_dict()
+    assert "eo:cloud_cover" in item_dict["properties"]
+
+
+def test_create_item_datetime():
+    """Should return a valid item with datetime from IMD."""
+    with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="FALSE"):
+        src_path = os.path.join(PREFIX, "dataset_cloud_date_metadata.tif")
+        item = create_stac_item(src_path, with_eo=True)
+    assert item.validate()
+    item_dict = item.to_dict()
+    assert item_dict["properties"]["datetime"] == "2011-05-01T13:00:00Z"

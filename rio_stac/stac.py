@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy
 import pystac
 import rasterio
+from pystac.utils import str_to_datetime
 from rasterio import transform, warp
 from rasterio.features import bounds as feature_bounds
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
@@ -17,6 +18,7 @@ from rasterio.vrt import WarpedVRT
 
 PROJECTION_EXT_VERSION = "v1.0.0"
 RASTER_EXT_VERSION = "v1.1.0"
+EO_EXT_VERSION = "v1.0.0"
 
 
 def bbox_to_geom(bbox: Tuple[float, float, float, float]) -> Dict:
@@ -82,6 +84,33 @@ def get_projection_info(
     # if epsg is None:
     #      meta["wkt2"] = src_dst.crs.to_wkt()
     return meta
+
+
+def get_eobands_info(
+    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile]
+) -> List:
+    """Get eo:bands metadata.
+
+    see: https://github.com/stac-extensions/eo#item-properties-or-asset-fields
+
+    """
+    eo_bands = []
+
+    colors = src_dst.colorinterp
+    for ix in src_dst.indexes:
+        band_meta = {"name": f"b{ix}"}
+
+        descr = src_dst.descriptions[ix - 1]
+        color = colors[ix - 1].name
+
+        # Description metadata or Colorinterp or Nothing
+        description = descr or color
+        if description:
+            band_meta["description"] = description
+
+        eo_bands.append(band_meta)
+
+    return eo_bands
 
 
 def _get_stats(arr: numpy.ma.MaskedArray, **kwargs: Any) -> Dict:
@@ -220,6 +249,7 @@ def create_stac_item(
     asset_href: Optional[str] = None,
     with_proj: bool = False,
     with_raster: bool = False,
+    with_eo: bool = False,
     raster_max_size: int = 1024,
 ) -> pystac.Item:
     """Create a Stac Item.
@@ -239,6 +269,7 @@ def create_stac_item(
         asset_href (str, optional): asset's URI (default to input path).
         with_proj (bool): Add the `projection` extension and properties (default to False).
         with_raster (bool): Add the `raster` extension and properties (default to False).
+        with_eo (bool): Add the `eo` extension and properties (default to False).
         raster_max_size (int): Limit array size from which to get the raster statistics. Defaults to 1024.
 
     Returns:
@@ -271,27 +302,50 @@ def create_stac_item(
             get_media_type(dataset) if asset_media_type == "auto" else asset_media_type
         )
 
+        # Try to get datetime from https://gdal.org/user/raster_data_model.html#imagery-domain-remote-sensing
+        dst_date = src_dst.get_tag_item("ACQUISITIONDATETIME", "IMAGERY")
+        dst_datetime = str_to_datetime(dst_date) if dst_date else None
+
+        if "start_datetime" not in properties and "end_datetime" not in properties:
+            input_datetime = (
+                input_datetime or dst_datetime or datetime.datetime.utcnow()
+            )
+
         # add projection properties
         if with_proj:
+            extensions.append(
+                f"https://stac-extensions.github.io/projection/{PROJECTION_EXT_VERSION}/schema.json",
+            )
+
             properties.update(
                 {
                     f"proj:{name}": value
                     for name, value in get_projection_info(src_dst).items()
                 }
             )
-            extensions.append(
-                f"https://stac-extensions.github.io/projection/{PROJECTION_EXT_VERSION}/schema.json",
-            )
 
         # add raster properties
         raster_info = {}
         if with_raster:
-            raster_info = {
-                "raster:bands": get_raster_info(dataset, max_size=raster_max_size)
-            }
             extensions.append(
                 f"https://stac-extensions.github.io/raster/{RASTER_EXT_VERSION}/schema.json",
             )
+
+            raster_info = {
+                "raster:bands": get_raster_info(dataset, max_size=raster_max_size)
+            }
+
+        eo_info: Dict[str, List] = {}
+        if with_eo:
+            extensions.append(
+                f"https://stac-extensions.github.io/eo/{EO_EXT_VERSION}/schema.json",
+            )
+
+            eo_info = {"eo:bands": get_eobands_info(src_dst)}
+
+            cloudcover = src_dst.get_tag_item("CLOUDCOVER", "IMAGERY")
+            if cloudcover is not None:
+                properties.update({"eo:cloud_cover": int(cloudcover)})
 
     # item
     item = pystac.Item(
@@ -327,7 +381,7 @@ def create_stac_item(
             asset=pystac.Asset(
                 href=asset_href or dataset.name,
                 media_type=media_type,
-                extra_fields=raster_info,
+                extra_fields={**raster_info, **eo_info},
                 roles=asset_roles,
             ),
         )
