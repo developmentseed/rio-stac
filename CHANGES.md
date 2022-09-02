@@ -1,3 +1,8 @@
+
+## Next (TBD)
+
+* add python 3.10 support (https://github.com/developmentseed/rio-stac/pull/37)
+
 ## 0.4.2 (2022-06-09)
 
 * fix bad `nan/inf/-inf` nodata test
