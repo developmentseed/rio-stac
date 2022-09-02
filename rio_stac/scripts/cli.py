@@ -1,9 +1,9 @@
 """rio_stac.scripts.cli."""
 
-import datetime
 import json
 
 import click
+import rasterio
 from pystac import MediaType
 from pystac.utils import datetime_to_str, str_to_datetime
 from rasterio.rio import options
@@ -56,7 +56,14 @@ def _cb_key_val(ctx, param, value):
     help="Additional property to add.",
 )
 @click.option("--id", type=str, help="Item id.")
-@click.option("--asset-name", "-n", type=str, default="asset", help="Asset name.")
+@click.option(
+    "--asset-name",
+    "-n",
+    type=str,
+    default="asset",
+    help="Asset name.",
+    show_default=True,
+)
 @click.option("--asset-href", type=str, help="Overwrite asset href.")
 @click.option(
     "--asset-mediatype",
@@ -66,14 +73,30 @@ def _cb_key_val(ctx, param, value):
 @click.option(
     "--with-proj/--without-proj",
     default=True,
-    help="Add the projection extension and properties (default to True).",
+    help="Add the 'projection' extension and properties.",
+    show_default=True,
 )
 @click.option(
     "--with-raster/--without-raster",
     default=True,
-    help="Add the raster extension and properties (default to True).",
+    help="Add the 'raster' extension and properties.",
+    show_default=True,
+)
+@click.option(
+    "--with-eo/--without-eo",
+    default=True,
+    help="Add the 'eo' extension and properties.",
+    show_default=True,
 )
 @click.option("--output", "-o", type=click.Path(exists=False), help="Output file name")
+@click.option(
+    "--config",
+    "config",
+    metavar="NAME=VALUE",
+    multiple=True,
+    callback=options._cb_key_val,
+    help="GDAL configuration options.",
+)
 def stac(
     input,
     input_datetime,
@@ -87,14 +110,14 @@ def stac(
     asset_mediatype,
     with_proj,
     with_raster,
+    with_eo,
     output,
+    config,
 ):
     """Rasterio STAC plugin: Create a STAC Item for raster dataset."""
     property = property or {}
 
-    if not input_datetime:
-        input_datetime = datetime.datetime.utcnow()
-    else:
+    if input_datetime:
         if "/" in input_datetime:
             start_datetime, end_datetime = input_datetime.split("/")
             property["start_datetime"] = datetime_to_str(
@@ -110,20 +133,22 @@ def stac(
 
     extensions = [e for e in extension if e]
 
-    item = create_stac_item(
-        input,
-        input_datetime=input_datetime,
-        extensions=extensions,
-        collection=collection,
-        collection_url=collection_url,
-        properties=property,
-        id=id,
-        asset_name=asset_name,
-        asset_href=asset_href,
-        asset_media_type=asset_mediatype,
-        with_proj=with_proj,
-        with_raster=with_raster,
-    )
+    with rasterio.Env(**config):
+        item = create_stac_item(
+            input,
+            input_datetime=input_datetime,
+            extensions=extensions,
+            collection=collection,
+            collection_url=collection_url,
+            properties=property,
+            id=id,
+            asset_name=asset_name,
+            asset_href=asset_href,
+            asset_media_type=asset_mediatype,
+            with_proj=with_proj,
+            with_raster=with_raster,
+            with_eo=with_eo,
+        )
 
     if output:
         with open(output, "w") as f:

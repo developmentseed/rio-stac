@@ -49,54 +49,145 @@ $ pip install git+http://github.com/developmentseed/rio-stac
 ### Example
 
 ```json
-$ rio stac raster.tif | jq
+// rio stac tests/fixtures/dataset_cog.tif | jq
 {
   "type": "Feature",
-  "stac_version": "1.0.0-beta.2",
-  "id": "raster.tif",
+  "stac_version": "1.0.0",
+  "id": "dataset_cog.tif",
   "properties": {
-    "proj:epsg": 3857,
-    "proj:geometry": {"type": "Polygon", "coordinates": [...]},
-    "proj:bbox": [..],
-    "proj:shape": [8192, 8192],
-    "proj:transform": [...],
-    "datetime": "2021-03-19T02:27:33.266356Z"
+    "proj:epsg": 32621,
+    "proj:geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            373185,
+            8019284.949381611
+          ],
+          [
+            639014.9492102272,
+            8019284.949381611
+          ],
+          [
+            639014.9492102272,
+            8286015
+          ],
+          [
+            373185,
+            8286015
+          ],
+          [
+            373185,
+            8019284.949381611
+          ]
+        ]
+      ]
+    },
+    "proj:bbox": [
+      373185,
+      8019284.949381611,
+      639014.9492102272,
+      8286015
+    ],
+    "proj:shape": [
+      2667,
+      2658
+    ],
+    "proj:transform": [
+      100.01126757344893,
+      0,
+      373185,
+      0,
+      -100.01126757344893,
+      8286015,
+      0,
+      0,
+      1
+    ],
+    "datetime": "2022-09-02T16:17:51.427680Z"
   },
   "geometry": {
     "type": "Polygon",
-    "coordinates": [...]
+    "coordinates": [
+      [
+        [
+          -60.72634617297825,
+          72.23689137791739
+        ],
+        [
+          -52.91627525610924,
+          72.22979795551834
+        ],
+        [
+          -52.301598718454485,
+          74.61378388950398
+        ],
+        [
+          -61.28762442711404,
+          74.62204314252978
+        ],
+        [
+          -60.72634617297825,
+          72.23689137791739
+        ]
+      ]
+    ]
   },
   "links": [],
   "assets": {
     "asset": {
-      "href": "raster.tif",
+      "href": "/Users/vincentsarago/Dev/DevSeed/rio-stac/tests/fixtures/dataset_cog.tif",
       "raster:bands": [
         {
-          "sampling": "point",
           "data_type": "uint16",
           "scale": 1,
           "offset": 0,
+          "sampling": "point",
           "statistics": {
             "mean": 2107.524612053134,
             "minimum": 1,
             "maximum": 7872,
-            "stdev": 2271.0065537857326,
+            "stddev": 2271.0065537857326,
             "valid_percent": 9.564764936336924e-05
           },
           "histogram": {
             "count": 11,
             "min": 1,
             "max": 7872,
-            "buckets": [503460, 0, 0, 161792, 283094, 0, 0, 0, 87727, 9431]
+            "buckets": [
+              503460,
+              0,
+              0,
+              161792,
+              283094,
+              0,
+              0,
+              0,
+              87727,
+              9431
+            ]
           }
         }
       ],
+      "eo:bands": [
+        {
+          "name": "b1",
+          "description": "gray"
+        }
+      ],
+      "roles": []
     }
   },
-  "bbox": [...],
+  "bbox": [
+    -61.28762442711404,
+    72.22979795551834,
+    -52.301598718454485,
+    74.62204314252978
+  ],
   "stac_extensions": [
     "https://stac-extensions.github.io/projection/v1.0.0/schema.json",
-    "https://stac-extensions.github.io/raster/v1.0.0/schema.json"
+    "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/eo/v1.0.0/schema.json"
   ]
 }
 ```
