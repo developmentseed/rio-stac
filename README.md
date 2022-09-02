@@ -49,7 +49,7 @@ $ pip install git+http://github.com/developmentseed/rio-stac
 ### Example
 
 ```json
-$ rio stac tests/fixtures/dataset_cog.tif | jq
+// rio stac tests/fixtures/dataset_cog.tif | jq
 {
   "type": "Feature",
   "stac_version": "1.0.0",
@@ -104,7 +104,7 @@ $ rio stac tests/fixtures/dataset_cog.tif | jq
       0,
       1
     ],
-    "datetime": "2022-09-02T15:02:28.295654Z"
+    "datetime": "2022-09-02T16:17:51.427680Z"
   },
   "geometry": {
     "type": "Polygon",
@@ -136,7 +136,7 @@ $ rio stac tests/fixtures/dataset_cog.tif | jq
   "links": [],
   "assets": {
     "asset": {
-      "href": "dataset_cog.tif",
+      "href": "/Users/vincentsarago/Dev/DevSeed/rio-stac/tests/fixtures/dataset_cog.tif",
       "raster:bands": [
         {
           "data_type": "uint16",
@@ -171,7 +171,8 @@ $ rio stac tests/fixtures/dataset_cog.tif | jq
       ],
       "eo:bands": [
         {
-          "name": "Band1"
+          "name": "b1",
+          "description": "gray"
         }
       ],
       "roles": []

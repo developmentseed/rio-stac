@@ -54,11 +54,11 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
 
     link: https://github.com/stac-extensions/projection/
 
-    ```
+    ```json
     {
         "proj:epsg": 3857,
         "proj:geometry": {"type": "Polygon", "coordinates": [...]},
-        "proj:bbox": [..],
+        "proj:bbox": [...],
         "proj:shape": [8192, 8192],
         "proj:transform": [...],
         "datetime": "2021-03-19T02:27:33.266356Z"
@@ -73,7 +73,7 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
 
     link: https://github.com/stac-extensions/raster
 
-    ```
+    ```json
     "raster:bands": [
       {
         "sampling": "point",
@@ -106,12 +106,12 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
     link: https://github.com/stac-extensions/eo/
 
     Cloud Cover property
-    ```
+    ```json
     "eo:cloud_cover": 2
     ```
 
     Asset's bands
-    ```
+    ```json
     "eo:bands": [
       {
         "name": "b1",
@@ -152,10 +152,10 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
 
     Name to use in the assets section. Default to `asset`.
 
-    ```
+    ```json
     {
         "asset": {
-        "href": "raster.tif"
+            "href": "raster.tif"
         }
     }
     ```
@@ -174,7 +174,7 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
 ### Example
 
 ```json
-$ rio stac tests/fixtures/dataset_cog.tif | jq
+// rio stac tests/fixtures/dataset_cog.tif | jq
 {
   "type": "Feature",
   "stac_version": "1.0.0",
@@ -318,14 +318,14 @@ $ rio stac tests/fixtures/dataset_cog.tif | jq
 ```
 
 ```json
-$ rio stac S-2_20200422_COG.tif \
-    -d 2020-04-22 \
-    -c myprivatecollection \
-    -p comments:name=myfile \
-    --id COG \
-    -n mosaic \
-    --asset-href https://somewhere.overtherainbow.io/S-2_20200422_COG.tif \
-    --asset-mediatype COG | jq
+// rio stac S-2_20200422_COG.tif \
+//   -d 2020-04-22 \
+//   -c myprivatecollection \
+//   -p comments:name=myfile \
+//   --id COG \
+//   -n mosaic \
+//   --asset-href https://somewhere.overtherainbow.io/S-2_20200422_COG.tif \
+//   --asset-mediatype COG | jq
 {
   "type": "Feature",
   "stac_version": "1.0.0",
