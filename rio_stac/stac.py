@@ -302,11 +302,11 @@ def create_stac_item(
             get_media_type(dataset) if asset_media_type == "auto" else asset_media_type
         )
 
-        # Try to get datetime from https://gdal.org/user/raster_data_model.html#imagery-domain-remote-sensing
-        dst_date = src_dst.get_tag_item("ACQUISITIONDATETIME", "IMAGERY")
-        dst_datetime = str_to_datetime(dst_date) if dst_date else None
-
         if "start_datetime" not in properties and "end_datetime" not in properties:
+            # Try to get datetime from https://gdal.org/user/raster_data_model.html#imagery-domain-remote-sensing
+            dst_date = src_dst.get_tag_item("ACQUISITIONDATETIME", "IMAGERY")
+            dst_datetime = str_to_datetime(dst_date) if dst_date else None
+
             input_datetime = (
                 input_datetime or dst_datetime or datetime.datetime.utcnow()
             )
@@ -371,10 +371,8 @@ def create_stac_item(
     # item.assets
     if assets:
         for key, asset in assets.items():
-            item.add_asset(
-                key=key,
-                asset=asset,
-            )
+            item.add_asset(key=key, asset=asset)
+
     else:
         item.add_asset(
             key=asset_name,
