@@ -46,6 +46,63 @@ $ pip install rio-stac
 $ pip install git+http://github.com/developmentseed/rio-stac
 ```
 
+### Example
+
+```json
+$ rio stac raster.tif | jq
+{
+  "type": "Feature",
+  "stac_version": "1.0.0-beta.2",
+  "id": "raster.tif",
+  "properties": {
+    "proj:epsg": 3857,
+    "proj:geometry": {"type": "Polygon", "coordinates": [...]},
+    "proj:bbox": [..],
+    "proj:shape": [8192, 8192],
+    "proj:transform": [...],
+    "datetime": "2021-03-19T02:27:33.266356Z"
+  },
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [...]
+  },
+  "links": [],
+  "assets": {
+    "asset": {
+      "href": "raster.tif",
+      "raster:bands": [
+        {
+          "sampling": "point",
+          "data_type": "uint16",
+          "scale": 1,
+          "offset": 0,
+          "statistics": {
+            "mean": 2107.524612053134,
+            "minimum": 1,
+            "maximum": 7872,
+            "stdev": 2271.0065537857326,
+            "valid_percent": 9.564764936336924e-05
+          },
+          "histogram": {
+            "count": 11,
+            "min": 1,
+            "max": 7872,
+            "buckets": [503460, 0, 0, 161792, 283094, 0, 0, 0, 87727, 9431]
+          }
+        }
+      ],
+    }
+  },
+  "bbox": [...],
+  "stac_extensions": [
+    "https://stac-extensions.github.io/projection/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/raster/v1.0.0/schema.json"
+  ]
+}
+```
+
+See https://developmentseed.org/rio-stac/intro/ for more.
+
 ## Contribution & Development
 
 See [CONTRIBUTING.md](https://github.com/developmentseed/rio-stac/blob/master/CONTRIBUTING.md)
