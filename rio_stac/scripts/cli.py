@@ -56,7 +56,14 @@ def _cb_key_val(ctx, param, value):
     help="Additional property to add.",
 )
 @click.option("--id", type=str, help="Item id.")
-@click.option("--asset-name", "-n", type=str, default="asset", help="Asset name.")
+@click.option(
+    "--asset-name",
+    "-n",
+    type=str,
+    default="asset",
+    help="Asset name.",
+    show_default=True,
+)
 @click.option("--asset-href", type=str, help="Overwrite asset href.")
 @click.option(
     "--asset-mediatype",
@@ -67,16 +74,19 @@ def _cb_key_val(ctx, param, value):
     "--with-proj/--without-proj",
     default=True,
     help="Add the 'projection' extension and properties (default to True).",
+    show_default=True,
 )
 @click.option(
     "--with-raster/--without-raster",
     default=True,
     help="Add the 'raster' extension and properties (default to True).",
+    show_default=True,
 )
 @click.option(
     "--with-eo/--without-eo",
     default=True,
     help="Add the 'eo' extension and properties (default to True).",
+    show_default=True,
 )
 @click.option("--output", "-o", type=click.Path(exists=False), help="Output file name")
 @click.option(
