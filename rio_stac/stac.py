@@ -245,7 +245,7 @@ def create_stac_item(
     assets: Optional[Dict[str, pystac.Asset]] = None,
     asset_name: str = "asset",
     asset_roles: Optional[List[str]] = [],
-    asset_media_type: Optional[Union[str, pystac.MediaType]] = None,
+    asset_media_type: Optional[Union[str, pystac.MediaType]] = "auto",
     asset_href: Optional[str] = None,
     with_proj: bool = False,
     with_raster: bool = False,
