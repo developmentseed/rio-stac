@@ -9,6 +9,7 @@ on:
       - 'README.md'
       - 'docs/**'
       - 'mkdocs.yml'
+      - 'rio_stac/**.py'
 
 jobs:
   build:
