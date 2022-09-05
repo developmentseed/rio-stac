@@ -90,7 +90,6 @@ def test_create_item_options():
     )
     assert item.validate()
     item_dict = item.to_dict()
-    assert "type" not in item_dict["assets"]["asset"]
     assert item_dict["links"] == []
     assert item_dict["stac_extensions"] == [
         "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
@@ -109,7 +108,6 @@ def test_create_item_options():
     )
     assert item.validate()
     item_dict = item.to_dict()
-    assert "type" not in item_dict["assets"]["asset"]
     assert item_dict["links"] == []
     assert item_dict["stac_extensions"] == [
         "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
@@ -171,7 +169,6 @@ def test_proj_without_proj():
     )
     assert item.validate()
     item_dict = item.to_dict()
-    assert "type" not in item_dict["assets"]["asset"]
     assert item_dict["links"] == []
     assert item_dict["stac_extensions"] == [
         "https://stac-extensions.github.io/projection/v1.0.0/schema.json",

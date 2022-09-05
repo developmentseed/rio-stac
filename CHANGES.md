@@ -1,9 +1,10 @@
 
-## Next (TBD)
+## 0.5.0 (2022-09-05)
 
 * add python 3.10 support (https://github.com/developmentseed/rio-stac/pull/37)
-* get dataset datetime from GDAL Raster Data Model
-* add `eo` extension support (`eo:cloud_cover`, `eo:bands`)
+* get dataset datetime from GDAL Raster Data Model **breaking**
+* add `eo` extension support (`eo:cloud_cover`, `eo:bands`) **breaking**
+* use `auto` by default for `asset_media_type` **breaking**
 
 ## 0.4.2 (2022-06-09)
 
