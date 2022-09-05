@@ -10,6 +10,7 @@ on:
       - 'docs/**'
       - 'mkdocs.yml'
       - 'rio_stac/**.py'
+      - .github/workflows/deploy_mkdocs.yml
 
 jobs:
   build:
