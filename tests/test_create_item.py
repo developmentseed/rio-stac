@@ -108,7 +108,6 @@ def test_create_item_options():
     )
     assert item.validate()
     item_dict = item.to_dict()
-    print(item_dict)
     assert item_dict["links"] == []
     assert item_dict["stac_extensions"] == [
         "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
