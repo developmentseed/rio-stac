@@ -68,7 +68,9 @@ def get_projection_info(
 
     """
     projjson = None
-    if not src_dst.crs.is_epsg_code:
+    if src_dst.crs is None:
+        epsg = None
+    elif not src_dst.crs.is_epsg_code:
         epsg = None
         try:
             projjson = src_dst.crs.to_dict(projjson=True)
