@@ -68,16 +68,13 @@ def get_projection_info(
 
     """
     projjson = None
-    if src_dst.crs is None:
-        epsg = None
-    elif not src_dst.crs.is_epsg_code:
-        epsg = None
+    epsg = None
+    if src_dst.crs is not None:
+        epsg = src_dst.crs.to_epsg() if src_dst.crs.is_epsg_code else None
         try:
             projjson = src_dst.crs.to_dict(projjson=True)
         except AttributeError:
-            projjson = None
-    else:
-        epsg = src_dst.crs.to_epsg()
+            pass
 
     meta = {
         "epsg": epsg,
