@@ -11,7 +11,7 @@
       <img src="https://github.com/developmentseed/rio-stac/workflows/CI/badge.svg" alt="Test">
   </a>
   <a href="https://codecov.io/gh/developmentseed/rio-stac" target="_blank">
-      <img src="https://codecov.io/gh/developmentseed/rio-stac/branch/master/graph/badge.svg" alt="Coverage">
+      <img src="https://codecov.io/gh/developmentseed/rio-stac/branch/main/graph/badge.svg" alt="Coverage">
   </a>
   <a href="https://pypi.org/project/rio-stac" target="_blank">
       <img src="https://img.shields.io/pypi/v/rio-stac?color=%2334D058&label=pypi%20package" alt="Package version">
@@ -19,7 +19,7 @@
   <a href="https://pypistats.org/packages/rio-stac" target="_blank">
       <img src="https://img.shields.io/pypi/dm/rio-stac.svg" alt="Downloads">
   </a>
-  <a href="https://github.com/developmentseed/rio-stac/blob/master/LICENSE" target="_blank">
+  <a href="https://github.com/developmentseed/rio-stac/blob/main/LICENSE" target="_blank">
       <img src="https://img.shields.io/github/license/developmentseed/rio-stac.svg" alt="Downloads">
   </a>
 </p>
@@ -196,7 +196,7 @@ See https://developmentseed.org/rio-stac/intro/ for more.
 
 ## Contribution & Development
 
-See [CONTRIBUTING.md](https://github.com/developmentseed/rio-stac/blob/master/CONTRIBUTING.md)
+See [CONTRIBUTING.md](https://github.com/developmentseed/rio-stac/blob/main/CONTRIBUTING.md)
 
 ## Authors
 
@@ -204,8 +204,8 @@ See [contributors](https://github.com/developmentseed/rio-stac/graphs/contributo
 
 ## Changes
 
-See [CHANGES.md](https://github.com/developmentseed/rio-stac/blob/master/CHANGES.md).
+See [CHANGES.md](https://github.com/developmentseed/rio-stac/blob/main/CHANGES.md).
 
 ## License
 
-See [LICENSE](https://github.com/developmentseed/rio-stac/blob/master/LICENSE)
+See [LICENSE](https://github.com/developmentseed/rio-stac/blob/main/LICENSE)

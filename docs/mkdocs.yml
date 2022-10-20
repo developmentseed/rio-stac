@@ -5,7 +5,7 @@ site_description: 'Create a STAC Items from raster datasets.'
 # Repository
 repo_name: 'developmentseed/rio-stac'
 repo_url: 'http://github.com/developmentseed/rio-stac'
-edit_uri: 'blob/master/docs/src/'
+edit_uri: 'blob/main/docs/src/'
 site_url: 'https://developmentseed.org/rio-stac/'
 
 # Social links
