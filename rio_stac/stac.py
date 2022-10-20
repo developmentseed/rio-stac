@@ -67,10 +67,14 @@ def get_projection_info(
     see: https://github.com/stac-extensions/projection/#item-properties-or-asset-fields
 
     """
-    try:
-        epsg = src_dst.crs.to_epsg() or None
-    except AttributeError:
-        epsg = None
+    projjson = None
+    epsg = None
+    if src_dst.crs is not None:
+        epsg = src_dst.crs.to_epsg() if src_dst.crs.is_epsg_code else None
+        try:
+            projjson = src_dst.crs.to_dict(projjson=True)
+        except (AttributeError, TypeError):
+            pass
 
     meta = {
         "epsg": epsg,
@@ -79,6 +83,8 @@ def get_projection_info(
         "shape": [src_dst.height, src_dst.width],
         "transform": list(src_dst.transform),
     }
+    if projjson is not None:
+        meta["projjson"] = projjson
     # rasterio can't reproduce wkt2
     # ref: https://github.com/mapbox/rasterio/issues/2044
     # if epsg is None:

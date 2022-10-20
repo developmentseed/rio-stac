@@ -111,3 +111,24 @@ def test_rio_stac_cli(runner):
         assert "datetime" in stac_item["properties"]
         assert "proj:epsg" in stac_item["properties"]
         assert "raster:bands" in stac_item["assets"]["asset"]
+
+        with runner.isolated_filesystem():
+            src_path = os.path.join(PREFIX, "dataset_nocrs.tif")
+            result = runner.invoke(stac, [src_path])
+            assert not result.exception
+            assert result.exit_code == 0
+            stac_item = json.loads(result.output)
+            assert stac_item["type"] == "Feature"
+            assert stac_item["assets"]["asset"]
+            assert stac_item["assets"]["asset"]["href"] == src_path
+            assert stac_item["links"] == []
+            assert stac_item["stac_extensions"] == [
+                "https://stac-extensions.github.io/projection/v1.0.0/schema.json",
+                "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
+                "https://stac-extensions.github.io/eo/v1.0.0/schema.json",
+            ]
+            assert "datetime" in stac_item["properties"]
+            assert "proj:epsg" in stac_item["properties"]
+            assert "proj:projjson" in stac_item["properties"]
+            assert "raster:bands" in stac_item["assets"]["asset"]
+            assert "eo:bands" in stac_item["assets"]["asset"]

@@ -2,6 +2,7 @@
 ## 0.6.0 (TBD)
 
 * remove python 3.7 support (https://github.com/developmentseed/rio-stac/pull/42)
+* add `projjson` representation of the dataset CRS if available (author @clausmichele, https://github.com/developmentseed/rio-stac/pull/41)
 
 ## 0.5.0 (2022-09-05)
 
