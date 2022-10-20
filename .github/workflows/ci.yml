@@ -9,14 +9,14 @@ on:
     - '*'
   pull_request:
 env:
-  LATEST_PY_VERSION: '3.9'
+  LATEST_PY_VERSION: '3.10'
 
 jobs:
   tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.8', '3.9', '3.10']
 
     steps:
       - uses: actions/checkout@v2
@@ -57,7 +57,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v1
         with:
-          python-version: 3.8
+          python-version: ${{ env.LATEST_PY_VERSION }}
 
       - name: Install dependencies
         run: |

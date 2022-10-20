@@ -1,4 +1,8 @@
 
+## 0.6.0 (TBD)
+
+* remove python 3.7 support (https://github.com/developmentseed/rio-stac/pull/42)
+
 ## 0.5.0 (2022-09-05)
 
 * add python 3.10 support (https://github.com/developmentseed/rio-stac/pull/37)
