@@ -308,3 +308,18 @@ def test_create_item_datetime():
     assert item.validate()
     item_dict = item.to_dict()
     assert item_dict["properties"]["datetime"] == "2011-05-01T13:00:00Z"
+
+
+def test_densify_geom():
+    """Should run without exceptions."""
+    src_path = os.path.join(PREFIX, "dataset_geom.tif")
+
+    item = create_stac_item(src_path, with_eo=True)
+    assert item.validate()
+    item_dict = item.to_dict()
+
+    item_dens = create_stac_item(src_path, geom_densify_pts=21)
+    assert item_dens.validate()
+    item_dens_dict = item_dens.to_dict()
+
+    assert item_dict["bbox"] != item_dens_dict["bbox"]
