@@ -77,8 +77,6 @@ def get_dataset_geom(
             # 3. Reproject the geometry to "epsg:4326"
             geom = warp.transform_geom(src_dst.crs, EPSG_4326, geom, precision=6)
 
-            # TODO: handle dateline crossing polygons
-
         bbox = feature_bounds(geom)
 
     else:
