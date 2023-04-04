@@ -88,6 +88,18 @@ def _cb_key_val(ctx, param, value):
     help="Add the 'eo' extension and properties.",
     show_default=True,
 )
+@click.option(
+    "--max-raster-size",
+    type=int,
+    default=1024,
+    help="Limit array size from which to get the raster statistics.",
+    show_default=True,
+)
+@click.option(
+    "--densify-geom",
+    type=int,
+    help="Densifies the number of points on each edges of the polygon geometry to account for non-linear transformation.",
+)
 @click.option("--output", "-o", type=click.Path(exists=False), help="Output file name")
 @click.option(
     "--config",
@@ -111,11 +123,14 @@ def stac(
     with_proj,
     with_raster,
     with_eo,
+    max_raster_size,
+    densify_geom,
     output,
     config,
 ):
     """Rasterio STAC plugin: Create a STAC Item for raster dataset."""
     property = property or {}
+    densify_geom = densify_geom or 0
 
     if input_datetime:
         if "/" in input_datetime:
@@ -148,6 +163,8 @@ def stac(
             with_proj=with_proj,
             with_raster=with_raster,
             with_eo=with_eo,
+            raster_max_size=max_raster_size,
+            geom_densify_pts=densify_geom,
         )
 
     if output:

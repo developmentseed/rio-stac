@@ -20,6 +20,8 @@ PROJECTION_EXT_VERSION = "v1.0.0"
 RASTER_EXT_VERSION = "v1.1.0"
 EO_EXT_VERSION = "v1.0.0"
 
+EPSG_4326 = rasterio.crs.CRS.from_epsg(4326)
+
 
 def bbox_to_geom(bbox: Tuple[float, float, float, float]) -> Dict:
     """Return a geojson geometry from a bbox."""
@@ -37,26 +39,56 @@ def bbox_to_geom(bbox: Tuple[float, float, float, float]) -> Dict:
     }
 
 
-def get_metadata(
-    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile]
+def get_dataset_geom(
+    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile],
+    densify_pts: int = 0,
 ) -> Dict:
-    """Get Raster Metadata."""
-    metadata: Dict[str, Any] = {}
+    """Get Raster Footprint."""
+    if densify_pts < 0:
+        raise ValueError("`densify_pts` must be positive")
 
     if src_dst.crs is not None:
-        src_geom = bbox_to_geom(src_dst.bounds)
-        geom = warp.transform_geom(src_dst.crs, "epsg:4326", src_geom)
+        # 1. Create Polygon from raster bounds
+        geom = bbox_to_geom(src_dst.bounds)
+
+        if src_dst.crs != EPSG_4326:
+            if densify_pts:
+                # 2. Densify the Polygon geometry
+                left, bottom, right, top = src_dst.bounds
+
+                # Derived from code found at
+                # https://stackoverflow.com/questions/64995977/generating-equidistance-points-along-the-boundary-of-a-polygon-but-cw-ccw
+                coordinates = numpy.asarray(geom["coordinates"][0])
+
+                densified_number = len(coordinates) * densify_pts
+                existing_indices = numpy.arange(0, densified_number, densify_pts)
+                interp_indices = numpy.arange(existing_indices[-1] + 1)
+                interp_x = numpy.interp(
+                    interp_indices, existing_indices, coordinates[:, 0]
+                )
+                interp_y = numpy.interp(
+                    interp_indices, existing_indices, coordinates[:, 1]
+                )
+                geom = {
+                    "type": "Polygon",
+                    "coordinates": [[(x, y) for x, y in zip(interp_x, interp_y)]],
+                }
+
+            # 3. Reproject the geometry to "epsg:4326"
+            geom = warp.transform_geom(src_dst.crs, EPSG_4326, geom, precision=6)
+
+            # TODO: handle dateline crossing polygons
+
         bbox = feature_bounds(geom)
+
     else:
         warnings.warn(
-            "Input file doesn't have geom information, setting bbox to (-180,-90,180,90)."
+            "Input file doesn't have CRS information, setting geometry and bbox to (-180,-90,180,90)."
         )
         bbox = (-180.0, -90.0, 180.0, 90.0)
         geom = bbox_to_geom(bbox)
 
-    metadata["bbox"] = list(bbox)
-    metadata["footprint"] = geom
-    return metadata
+    return {"bbox": list(bbox), "footprint": geom}
 
 
 def get_projection_info(
@@ -257,6 +289,7 @@ def create_stac_item(
     with_raster: bool = False,
     with_eo: bool = False,
     raster_max_size: int = 1024,
+    geom_densify_pts: int = 0,
 ) -> pystac.Item:
     """Create a Stac Item.
 
@@ -277,6 +310,7 @@ def create_stac_item(
         with_raster (bool): Add the `raster` extension and properties (default to False).
         with_eo (bool): Add the `eo` extension and properties (default to False).
         raster_max_size (int): Limit array size from which to get the raster statistics. Defaults to 1024.
+        geom_densify_pts (int): Number of points to add to each edge to account for nonlinear edges transformation (Note: GDAL uses 21).
 
     Returns:
         pystac.Item: valid STAC Item.
@@ -303,7 +337,7 @@ def create_stac_item(
         else:
             src_dst = dataset
 
-        meta = get_metadata(src_dst)
+        dataset_geom = get_dataset_geom(src_dst, densify_pts=geom_densify_pts)
 
         media_type = (
             get_media_type(dataset) if asset_media_type == "auto" else asset_media_type
@@ -357,8 +391,8 @@ def create_stac_item(
     # item
     item = pystac.Item(
         id=id or os.path.basename(dataset.name),
-        geometry=meta["footprint"],
-        bbox=meta["bbox"],
+        geometry=dataset_geom["footprint"],
+        bbox=dataset_geom["bbox"],
         collection=collection,
         stac_extensions=extensions,
         datetime=input_datetime,

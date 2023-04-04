@@ -25,6 +25,8 @@ Options:
   --with-proj / --without-proj      Add the 'projection' extension and properties (default to True).
   --with-raster / --without-raster  Add the 'raster' extension and properties (default to True).
   --with-eo / --without-eo          Add the 'eo' extension and properties (default to True).
+  --max-raster-size INTEGER         Limit array size from which to get the raster statistics (default to 1024).
+  --densify-geom INTEGER            Densifies the number of points on each edges of the polygon geometry to account for non-linear transformation.
   -o, --output PATH                 Output file name
   --config NAME=VALUE               GDAL configuration options.
   --help                            Show this message and exit.
@@ -170,6 +172,9 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
 
     If set to `auto`, `rio-stac` will try to find the mediatype.
 
+- **geometry density** (--densify-geom)
+
+    When creating the GeoJSON geometry from the input dataset we usually take the `bounding box` of the data and construct a simple Polygon which then get reprojected to EPSG:4326. Sadly the world is neither flat and square, so doing a transformation using bounding box can lead to non-ideal result. To get better results and account for nonlinear transformation you can add `points` on each edge of the polygon using `--densify-geom` option.
 
 ### Example
 
