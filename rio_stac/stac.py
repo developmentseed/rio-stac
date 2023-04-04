@@ -143,7 +143,7 @@ def _get_stats(arr: numpy.ma.MaskedArray, **kwargs: Any) -> Dict:
     }
 
 
-def get_raster_info(
+def get_raster_info(  # noqa: C901
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile],
     max_size: int = 1024,
 ) -> List[Dict]:
@@ -250,7 +250,7 @@ def create_stac_item(
     id: Optional[str] = None,
     assets: Optional[Dict[str, pystac.Asset]] = None,
     asset_name: str = "asset",
-    asset_roles: Optional[List[str]] = [],
+    asset_roles: Optional[List[str]] = None,
     asset_media_type: Optional[Union[str, pystac.MediaType]] = "auto",
     asset_href: Optional[str] = None,
     with_proj: bool = False,
@@ -284,6 +284,7 @@ def create_stac_item(
     """
     properties = properties or {}
     extensions = extensions or []
+    asset_roles = asset_roles or []
 
     with ExitStack() as ctx:
         if isinstance(source, (DatasetReader, DatasetWriter, WarpedVRT)):
