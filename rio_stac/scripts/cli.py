@@ -100,6 +100,11 @@ def _cb_key_val(ctx, param, value):
     type=int,
     help="Densifies the number of points on each edges of the polygon geometry to account for non-linear transformation.",
 )
+@click.option(
+    "--geom-precision",
+    type=int,
+    help="Round geometry coordinates to this number of decimal.",
+)
 @click.option("--output", "-o", type=click.Path(exists=False), help="Output file name")
 @click.option(
     "--config",
@@ -125,12 +130,14 @@ def stac(
     with_eo,
     max_raster_size,
     densify_geom,
+    geom_precision,
     output,
     config,
 ):
     """Rasterio STAC plugin: Create a STAC Item for raster dataset."""
     property = property or {}
     densify_geom = densify_geom or 0
+    geom_precision = geom_precision or 0
 
     if input_datetime:
         if "/" in input_datetime:
@@ -165,6 +172,7 @@ def stac(
             with_eo=with_eo,
             raster_max_size=max_raster_size,
             geom_densify_pts=densify_geom,
+            geom_precision=geom_precision,
         )
 
     if output:

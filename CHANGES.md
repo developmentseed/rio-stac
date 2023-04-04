@@ -1,3 +1,10 @@
+
+## 0.7.0 (2023-04-05)
+
+* add `geom_densify_pts` option allow adding points on Polygon edges to account for non-linear transformation
+* add `geom_precision` option to control the decimal precision of the output geometry
+* rename `rio_stac.stac.get_metadata` to `rio_stac.stac.get_dataset_geom`
+
 ## 0.6.1 (2022-10-26)
 
 * add python 3.11 support
