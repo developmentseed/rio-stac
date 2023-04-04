@@ -42,6 +42,7 @@ def bbox_to_geom(bbox: Tuple[float, float, float, float]) -> Dict:
 def get_dataset_geom(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile],
     densify_pts: int = 0,
+    precision: int = 0,
 ) -> Dict:
     """Get Raster Footprint."""
     if densify_pts < 0:
@@ -51,32 +52,24 @@ def get_dataset_geom(
         # 1. Create Polygon from raster bounds
         geom = bbox_to_geom(src_dst.bounds)
 
-        if src_dst.crs != EPSG_4326:
-            if densify_pts:
-                # 2. Densify the Polygon geometry
-                left, bottom, right, top = src_dst.bounds
+        # 2. Densify the Polygon geometry
+        if src_dst.crs != EPSG_4326 and densify_pts:
+            # Derived from code found at
+            # https://stackoverflow.com/questions/64995977/generating-equidistance-points-along-the-boundary-of-a-polygon-but-cw-ccw
+            coordinates = numpy.asarray(geom["coordinates"][0])
 
-                # Derived from code found at
-                # https://stackoverflow.com/questions/64995977/generating-equidistance-points-along-the-boundary-of-a-polygon-but-cw-ccw
-                coordinates = numpy.asarray(geom["coordinates"][0])
+            densified_number = len(coordinates) * densify_pts
+            existing_indices = numpy.arange(0, densified_number, densify_pts)
+            interp_indices = numpy.arange(existing_indices[-1] + 1)
+            interp_x = numpy.interp(interp_indices, existing_indices, coordinates[:, 0])
+            interp_y = numpy.interp(interp_indices, existing_indices, coordinates[:, 1])
+            geom = {
+                "type": "Polygon",
+                "coordinates": [[(x, y) for x, y in zip(interp_x, interp_y)]],
+            }
 
-                densified_number = len(coordinates) * densify_pts
-                existing_indices = numpy.arange(0, densified_number, densify_pts)
-                interp_indices = numpy.arange(existing_indices[-1] + 1)
-                interp_x = numpy.interp(
-                    interp_indices, existing_indices, coordinates[:, 0]
-                )
-                interp_y = numpy.interp(
-                    interp_indices, existing_indices, coordinates[:, 1]
-                )
-                geom = {
-                    "type": "Polygon",
-                    "coordinates": [[(x, y) for x, y in zip(interp_x, interp_y)]],
-                }
-
-            # 3. Reproject the geometry to "epsg:4326"
-            geom = warp.transform_geom(src_dst.crs, EPSG_4326, geom, precision=6)
-
+        # 3. Reproject the geometry to "epsg:4326"
+        geom = warp.transform_geom(src_dst.crs, EPSG_4326, geom, precision=precision)
         bbox = feature_bounds(geom)
 
     else:
@@ -288,6 +281,7 @@ def create_stac_item(
     with_eo: bool = False,
     raster_max_size: int = 1024,
     geom_densify_pts: int = 0,
+    geom_precision: int = 0,
 ) -> pystac.Item:
     """Create a Stac Item.
 
@@ -309,6 +303,7 @@ def create_stac_item(
         with_eo (bool): Add the `eo` extension and properties (default to False).
         raster_max_size (int): Limit array size from which to get the raster statistics. Defaults to 1024.
         geom_densify_pts (int): Number of points to add to each edge to account for nonlinear edges transformation (Note: GDAL uses 21).
+        geom_precision (int): If >= 0, geometry coordinates will be rounded to this number of decimal.
 
     Returns:
         pystac.Item: valid STAC Item.
@@ -335,7 +330,11 @@ def create_stac_item(
         else:
             src_dst = dataset
 
-        dataset_geom = get_dataset_geom(src_dst, densify_pts=geom_densify_pts)
+        dataset_geom = get_dataset_geom(
+            src_dst,
+            densify_pts=geom_densify_pts,
+            precision=geom_precision,
+        )
 
         media_type = (
             get_media_type(dataset) if asset_media_type == "auto" else asset_media_type
