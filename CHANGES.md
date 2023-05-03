@@ -1,4 +1,8 @@
 
+## 0.7.1 (2023-05-03)
+
+* fix bad precision default (author @hrodmn, https://github.com/developmentseed/rio-stac/pull/50)
+
 ## 0.7.0 (2023-04-05)
 
 * add `geom_densify_pts` option allow adding points on Polygon edges to account for non-linear transformation

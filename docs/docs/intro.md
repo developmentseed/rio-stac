@@ -27,7 +27,7 @@ Options:
   --with-eo / --without-eo          Add the 'eo' extension and properties (default to True).
   --max-raster-size INTEGER         Limit array size from which to get the raster statistics (default to 1024).
   --densify-geom INTEGER            Densifies the number of points on each edges of the polygon geometry to account for non-linear transformation.
-  --geom-precision INTEGER          Round geometry coordinates to this number of decimal.
+  --geom-precision INTEGER          Round geometry coordinates to this number of decimal. By default, coordinates will not be rounded
   -o, --output PATH                 Output file name
   --config NAME=VALUE               GDAL configuration options.
   --help                            Show this message and exit.
