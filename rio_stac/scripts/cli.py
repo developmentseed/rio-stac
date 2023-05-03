@@ -104,7 +104,7 @@ def _cb_key_val(ctx, param, value):
     "--geom-precision",
     type=int,
     default=-1,
-    help="Round geometry coordinates to this number of decimal.",
+    help="Round geometry coordinates to this number of decimal. By default, coordinates will not be rounded",
 )
 @click.option("--output", "-o", type=click.Path(exists=False), help="Output file name")
 @click.option(
