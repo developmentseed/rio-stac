@@ -42,7 +42,7 @@ def bbox_to_geom(bbox: Tuple[float, float, float, float]) -> Dict:
 def get_dataset_geom(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile],
     densify_pts: int = 0,
-    precision: int = 0,
+    precision: int = -1,
 ) -> Dict:
     """Get Raster Footprint."""
     if densify_pts < 0:
@@ -281,7 +281,7 @@ def create_stac_item(
     with_eo: bool = False,
     raster_max_size: int = 1024,
     geom_densify_pts: int = 0,
-    geom_precision: int = 0,
+    geom_precision: int = -1,
 ) -> pystac.Item:
     """Create a Stac Item.
 

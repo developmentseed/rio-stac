@@ -103,7 +103,8 @@ def _cb_key_val(ctx, param, value):
 @click.option(
     "--geom-precision",
     type=int,
-    help="Round geometry coordinates to this number of decimal.",
+    default=-1,
+    help="Round geometry coordinates to this number of decimal. By default, coordinates will not be rounded",
 )
 @click.option("--output", "-o", type=click.Path(exists=False), help="Output file name")
 @click.option(
@@ -137,7 +138,6 @@ def stac(
     """Rasterio STAC plugin: Create a STAC Item for raster dataset."""
     property = property or {}
     densify_geom = densify_geom or 0
-    geom_precision = geom_precision or 0
 
     if input_datetime:
         if "/" in input_datetime:
