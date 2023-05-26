@@ -20,6 +20,8 @@ extra:
 nav:
   - Home: 'index.md'
   - User Guide: 'intro.md'
+  - Examples:
+    - Create a STAC Items from multiple Assets: examples/Multi_assets_item.ipynb
   - API:
     - rio_stac.stac: api/rio_stac/stac.md
   - Development - Contributing: 'contributing.md'
@@ -27,6 +29,8 @@ nav:
 
 plugins:
   - search
+  - mkdocs-jupyter:
+      include_source: True
 
 # Theme
 theme:

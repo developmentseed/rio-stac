@@ -1,4 +1,9 @@
 
+## 0.8.0 (2023-05-26)
+
+* update `proj` extension to `v1.1.0`
+* update `eo` extension to `v1.1.0`
+
 ## 0.7.1 (2023-05-03)
 
 * fix bad precision default (author @hrodmn, https://github.com/developmentseed/rio-stac/pull/50)

@@ -23,9 +23,9 @@ jobs:
         - '3.11'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -57,9 +57,9 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.event.ref, 'refs/tags') || github.event_name == 'release'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ env.LATEST_PY_VERSION }}
 
@@ -71,16 +71,17 @@ jobs:
 
       - name: Set tag version
         id: tag
-        # https://stackoverflow.com/questions/58177786/get-the-current-pushed-tag-in-github-actions
-        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+        run: |
+          echo "version=${GITHUB_REF#refs/*/}"
+          echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
 
       - name: Set module version
         id: module
-        # https://stackoverflow.com/questions/58177786/get-the-current-pushed-tag-in-github-actions
-        run: echo ::set-output name=version::$(python -c 'from importlib.metadata import version; print(version("rio_stac"))')
+        run: |
+          echo version=$(python -c'import rio_stac; print(rio_stac.__version__)') >> $GITHUB_OUTPUT
 
       - name: Build and publish
-        if: steps.tag.outputs.tag == steps.module.outputs.version
+        if: ${{ steps.tag.outputs.version }} == ${{ steps.module.outputs.version}}
         env:
           FLIT_USERNAME: ${{ secrets.PYPI_USERNAME }}
           FLIT_PASSWORD: ${{ secrets.PYPI_PASSWORD }}

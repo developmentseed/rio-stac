@@ -111,7 +111,7 @@ def test_create_item_options():
     assert item_dict["links"] == []
     assert item_dict["stac_extensions"] == [
         "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
-        "https://stac-extensions.github.io/projection/v1.0.0/schema.json",
+        "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
     ]
     assert "datetime" in item_dict["properties"]
     assert "proj:epsg" in item_dict["properties"]
@@ -171,7 +171,7 @@ def test_proj_without_proj():
     item_dict = item.to_dict()
     assert item_dict["links"] == []
     assert item_dict["stac_extensions"] == [
-        "https://stac-extensions.github.io/projection/v1.0.0/schema.json",
+        "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
     ]
     assert "datetime" in item_dict["properties"]
     # EPSG should be set to None
@@ -272,7 +272,7 @@ def test_create_item_eo():
     item_dict = item.to_dict()
     assert item_dict["links"] == []
     assert item_dict["stac_extensions"] == [
-        "https://stac-extensions.github.io/eo/v1.0.0/schema.json",
+        "https://stac-extensions.github.io/eo/v1.1.0/schema.json",
     ]
     assert "eo:bands" in item_dict["assets"]["asset"]
     assert len(item_dict["assets"]["asset"]["eo:bands"]) == 1
