@@ -36,6 +36,7 @@ dev = [
 doc = [
     "mkdocs",
     "mkdocs-material",
+    "mkdocs-jupyter",
     "pygments",
     "pdocs",
 ]

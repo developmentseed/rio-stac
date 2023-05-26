@@ -16,9 +16,9 @@ from rasterio.features import bounds as feature_bounds
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.vrt import WarpedVRT
 
-PROJECTION_EXT_VERSION = "v1.0.0"
+PROJECTION_EXT_VERSION = "v1.1.0"
 RASTER_EXT_VERSION = "v1.1.0"
-EO_EXT_VERSION = "v1.0.0"
+EO_EXT_VERSION = "v1.1.0"
 
 EPSG_4326 = rasterio.crs.CRS.from_epsg(4326)
 
