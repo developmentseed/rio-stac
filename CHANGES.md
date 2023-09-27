@@ -1,4 +1,8 @@
 
+## 0.8.1 (TDB)
+
+* update `tests` requirements
+
 ## 0.8.0 (2023-05-26)
 
 * update `proj` extension to `v1.1.0`
