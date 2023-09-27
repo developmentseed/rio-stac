@@ -1,5 +1,5 @@
 
-## 0.8.1 (TDB)
+## 0.8.1 (2023-09-27)
 
 * update `tests` requirements
 
