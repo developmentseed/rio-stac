@@ -115,6 +115,8 @@ def test_create_item_options():
     ]
     assert "datetime" in item_dict["properties"]
     assert "proj:epsg" in item_dict["properties"]
+    assert "proj:wkt2" in item_dict["properties"]
+    assert "proj:projjson" in item_dict["properties"]
     assert "sci:citation" in item_dict["properties"]
 
     # external assets

@@ -1,4 +1,8 @@
 
+## 0.9.0 (2023-12-08)
+
+* add `wkt2` representation of the dataset CRS if available (author @emileten, https://github.com/developmentseed/rio-stac/pull/55)
+
 ## 0.8.1 (2023-09-27)
 
 * update `tests` requirements
