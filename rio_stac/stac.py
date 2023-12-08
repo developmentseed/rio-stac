@@ -86,15 +86,15 @@ def get_projection_info(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile]
 ) -> Dict:
     """Get projection metadata.
-    
+
     The STAC projection extension allows for three different ways to describe the coordinate reference system
-    associated with a raster : 
+    associated with a raster :
     - EPSG code
     - WKT2
     - PROJJSON
-    
+
     All are optional, and they can be provided altogether as well. Therefore, as long as one can be obtained from
-    the data, we add it to the returned dictionary. 
+    the data, we add it to the returned dictionary.
 
     see: https://github.com/stac-extensions/projection
 
@@ -103,13 +103,17 @@ def get_projection_info(
     wkt2 = None
     epsg = None
     if src_dst.crs is not None:
+        # EPSG
         epsg = src_dst.crs.to_epsg() if src_dst.crs.is_epsg_code else None
+
+        # PROJJSON
         try:
             projjson = src_dst.crs.to_dict(projjson=True)
         except (AttributeError, TypeError) as ex:
             warnings.warn(f"Could not get PROJJSON from dataset : {ex}")
             pass
-        
+
+        # WKT2
         try:
             wkt2 = src_dst.crs.to_wkt()
         except Exception as ex:
@@ -123,11 +127,13 @@ def get_projection_info(
         "shape": [src_dst.height, src_dst.width],
         "transform": list(src_dst.transform),
     }
+
     if projjson is not None:
         meta["projjson"] = projjson
+
     if wkt2 is not None:
         meta["wkt2"] = wkt2
-        
+
     return meta
 
 
