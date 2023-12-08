@@ -86,17 +86,34 @@ def get_projection_info(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile]
 ) -> Dict:
     """Get projection metadata.
+    
+    The STAC projection extension allows for three different ways to describe the coordinate reference system
+    associated with a raster : 
+    - EPSG code
+    - WKT2
+    - PROJJSON
+    
+    All are optional, and they can be provided altogether as well. Therefore, as long as one can be obtained from
+    the data, we add it to the returned dictionary. 
 
-    see: https://github.com/stac-extensions/projection/#item-properties-or-asset-fields
+    see: https://github.com/stac-extensions/projection
 
     """
     projjson = None
+    wkt2 = None
     epsg = None
     if src_dst.crs is not None:
         epsg = src_dst.crs.to_epsg() if src_dst.crs.is_epsg_code else None
         try:
             projjson = src_dst.crs.to_dict(projjson=True)
-        except (AttributeError, TypeError):
+        except (AttributeError, TypeError) as ex:
+            warnings.warn(f"Could not get PROJJSON from dataset : {ex}")
+            pass
+        
+        try:
+            wkt2 = src_dst.crs.to_wkt()
+        except Exception as ex:
+            warnings.warn(f"Could not get WKT2 from dataset : {ex}")
             pass
 
     meta = {
@@ -108,10 +125,9 @@ def get_projection_info(
     }
     if projjson is not None:
         meta["projjson"] = projjson
-    # rasterio can't reproduce wkt2
-    # ref: https://github.com/mapbox/rasterio/issues/2044
-    # if epsg is None:
-    #      meta["wkt2"] = src_dst.crs.to_wkt()
+    if wkt2 is not None:
+        meta["wkt2"] = wkt2
+        
     return meta
 
 
