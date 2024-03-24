@@ -164,11 +164,11 @@ def get_eobands_info(
     return eo_bands
 
 
-def _get_stats(arr: numpy.ma.MaskedArray, **kwargs: Any) -> Dict:
+def _get_stats(arr: numpy.ma.MaskedArray, bins: Union[int, List], **kwargs: Any) -> Dict:
     """Calculate array statistics."""
     # Avoid non masked nan/inf values
     numpy.ma.fix_invalid(arr, copy=False)
-    sample, edges = numpy.histogram(arr[~arr.mask])
+    sample, edges = numpy.histogram(arr[~arr.mask], bins=bins)
     return {
         "statistics": {
             "mean": arr.mean().item(),
@@ -191,6 +191,7 @@ def _get_stats(arr: numpy.ma.MaskedArray, **kwargs: Any) -> Dict:
 def get_raster_info(  # noqa: C901
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile],
     max_size: int = 1024,
+    bins: Union[int, List] = 10
 ) -> List[Dict]:
     """Get raster metadata.
 
@@ -239,7 +240,8 @@ def get_raster_info(  # noqa: C901
 
         value.update(
             _get_stats(
-                src_dst.read(indexes=band, out_shape=(height, width), masked=True)
+                src_dst.read(indexes=band, out_shape=(height, width), masked=True),
+                bins=bins
             )
         )
         meta.append(value)
@@ -302,6 +304,7 @@ def create_stac_item(
     with_raster: bool = False,
     with_eo: bool = False,
     raster_max_size: int = 1024,
+    raster_bins: Union[int, List] = 10,
     geom_densify_pts: int = 0,
     geom_precision: int = -1,
 ) -> pystac.Item:
@@ -324,6 +327,7 @@ def create_stac_item(
         with_raster (bool): Add the `raster` extension and properties (default to False).
         with_eo (bool): Add the `eo` extension and properties (default to False).
         raster_max_size (int): Limit array size from which to get the raster statistics. Defaults to 1024.
+        raster_bins (int or list of scalars): Number of bins (or list of bin edges) in raster band histogram. Defaults to 10.
         geom_densify_pts (int): Number of points to add to each edge to account for nonlinear edges transformation (Note: GDAL uses 21).
         geom_precision (int): If >= 0, geometry coordinates will be rounded to this number of decimal.
 
@@ -392,7 +396,7 @@ def create_stac_item(
             )
 
             raster_info = {
-                "raster:bands": get_raster_info(dataset, max_size=raster_max_size)
+                "raster:bands": get_raster_info(dataset, max_size=raster_max_size, bins=raster_bins)
             }
 
         eo_info: Dict[str, List] = {}
