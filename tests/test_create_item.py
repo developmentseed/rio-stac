@@ -115,8 +115,8 @@ def test_create_item_options():
     ]
     assert "datetime" in item_dict["properties"]
     assert "proj:epsg" in item_dict["properties"]
-    assert "proj:wkt2" in item_dict["properties"]
-    assert "proj:projjson" in item_dict["properties"]
+    assert "proj:wkt2" not in item_dict["properties"]
+    assert "proj:projjson" not in item_dict["properties"]
     assert "sci:citation" in item_dict["properties"]
 
     # external assets
@@ -330,3 +330,17 @@ def test_densify_geom():
     item_dens_dict = item_dens.to_dict()
 
     assert item_dict["bbox"] != item_dens_dict["bbox"]
+
+
+def test_mars_dataset():
+    """Test with Mars Dataset."""
+    MARS2000_SPHERE = rasterio.crs.CRS.from_proj4("+proj=longlat +R=3396190 +no_defs")
+    src_path = os.path.join(PREFIX, "dataset_mars.tif")
+
+    item = create_stac_item(src_path, geographic_crs=MARS2000_SPHERE, with_proj=True)
+    assert item.validate()
+    item_dict = item.to_dict()
+
+    assert not item_dict["properties"].get("proj:epsg")
+    assert "proj:projjson" not in item_dict["properties"]
+    assert "proj:wkt2" in item_dict["properties"]
