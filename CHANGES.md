@@ -2,6 +2,8 @@
 ## 0.10.0 (2024-10-29)
 
 * handle `TIFFTAG_DATETIME` metadata for STAC datetime
+* only set `proj:epsg` if present else use `proj:wkt2` or `proj:projjson`
+* add `geographic_crs` parameter to `create_stac_item` function to enable non-earth raster dataset
 
 ## 0.9.0 (2023-12-08)
 

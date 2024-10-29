@@ -129,6 +129,6 @@ def test_rio_stac_cli(runner):
             ]
             assert "datetime" in stac_item["properties"]
             assert "proj:epsg" in stac_item["properties"]
-            assert "proj:projjson" in stac_item["properties"]
+            assert "proj:projjson" not in stac_item["properties"]
             assert "raster:bands" in stac_item["assets"]["asset"]
             assert "eo:bands" in stac_item["assets"]["asset"]

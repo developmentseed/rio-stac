@@ -43,6 +43,7 @@ def get_dataset_geom(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile],
     densify_pts: int = 0,
     precision: int = -1,
+    geographic_crs: rasterio.crs.CRS = EPSG_4326,
 ) -> Dict:
     """Get Raster Footprint."""
     if densify_pts < 0:
@@ -53,7 +54,7 @@ def get_dataset_geom(
         geom = bbox_to_geom(src_dst.bounds)
 
         # 2. Densify the Polygon geometry
-        if src_dst.crs != EPSG_4326 and densify_pts:
+        if src_dst.crs != geographic_crs and densify_pts:
             # Derived from code found at
             # https://stackoverflow.com/questions/64995977/generating-equidistance-points-along-the-boundary-of-a-polygon-but-cw-ccw
             coordinates = numpy.asarray(geom["coordinates"][0])
@@ -69,7 +70,7 @@ def get_dataset_geom(
             }
 
         # 3. Reproject the geometry to "epsg:4326"
-        geom = warp.transform_geom(src_dst.crs, EPSG_4326, geom, precision=precision)
+        geom = warp.transform_geom(src_dst.crs, geographic_crs, geom, precision=precision)
         bbox = feature_bounds(geom)
 
     else:
@@ -99,26 +100,11 @@ def get_projection_info(
     see: https://github.com/stac-extensions/projection
 
     """
-    projjson = None
-    wkt2 = None
+
     epsg = None
     if src_dst.crs is not None:
         # EPSG
         epsg = src_dst.crs.to_epsg() if src_dst.crs.is_epsg_code else None
-
-        # PROJJSON
-        try:
-            projjson = src_dst.crs.to_dict(projjson=True)
-        except (AttributeError, TypeError) as ex:
-            warnings.warn(f"Could not get PROJJSON from dataset : {ex}")
-            pass
-
-        # WKT2
-        try:
-            wkt2 = src_dst.crs.to_wkt()
-        except Exception as ex:
-            warnings.warn(f"Could not get WKT2 from dataset : {ex}")
-            pass
 
     meta = {
         "epsg": epsg,
@@ -128,11 +114,17 @@ def get_projection_info(
         "transform": list(src_dst.transform),
     }
 
-    if projjson is not None:
-        meta["projjson"] = projjson
-
-    if wkt2 is not None:
-        meta["wkt2"] = wkt2
+    if not epsg and src_dst.crs:
+        # WKT2
+        try:
+            meta["wkt2"] = src_dst.crs.to_wkt()
+        except Exception as ex:
+            warnings.warn(f"Could not get WKT2 from dataset : {ex}")
+            # PROJJSON
+            try:
+                meta["projjson"] = src_dst.crs.to_dict(projjson=True)
+            except (AttributeError, TypeError) as ex:
+                warnings.warn(f"Could not get PROJJSON from dataset : {ex}")
 
     return meta
 
@@ -300,6 +292,7 @@ def create_stac_item(
     raster_max_size: int = 1024,
     geom_densify_pts: int = 0,
     geom_precision: int = -1,
+    geographic_crs: rasterio.crs.CRS = EPSG_4326,
 ) -> pystac.Item:
     """Create a Stac Item.
 
@@ -352,6 +345,7 @@ def create_stac_item(
             src_dst,
             densify_pts=geom_densify_pts,
             precision=geom_precision,
+            geographic_crs=geographic_crs,
         )
 
         media_type = (
