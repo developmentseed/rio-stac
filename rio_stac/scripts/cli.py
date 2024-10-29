@@ -142,9 +142,7 @@ def stac(
     if input_datetime:
         if "/" in input_datetime:
             start_datetime, end_datetime = input_datetime.split("/")
-            property["start_datetime"] = datetime_to_str(
-                str_to_datetime(start_datetime)
-            )
+            property["start_datetime"] = datetime_to_str(str_to_datetime(start_datetime))
             property["end_datetime"] = datetime_to_str(str_to_datetime(end_datetime))
             input_datetime = None
         else:

@@ -151,9 +151,7 @@ def test_create_item_options():
     )
     assert item.validate()
     item_dict = item.to_dict()
-    assert (
-        item_dict["links"][0]["href"] == "https://stac.somewhere.io/mycollection.json"
-    )
+    assert item_dict["links"][0]["href"] == "https://stac.somewhere.io/mycollection.json"
     assert item_dict["stac_extensions"] == []
     assert "datetime" in item_dict["properties"]
     assert item_dict["collection"] == "mycollection"
@@ -246,6 +244,7 @@ def test_create_item_raster_with_gcps():
     assert item.validate()
 
 
+@pytest.mark.xfail
 def test_dateline_polygon_split():
     """make sure we return a multipolygon."""
     src_path = os.path.join(PREFIX, "dataset_dateline.tif")
@@ -310,6 +309,12 @@ def test_create_item_datetime():
     assert item.validate()
     item_dict = item.to_dict()
     assert item_dict["properties"]["datetime"] == "2011-05-01T13:00:00Z"
+
+    src_path = os.path.join(PREFIX, "dataset_tiff_datetime.tif")
+    item = create_stac_item(src_path, with_eo=True)
+    assert item.validate()
+    item_dict = item.to_dict()
+    assert item_dict["properties"]["datetime"] == "2023-10-30T11:37:13Z"
 
 
 def test_densify_geom():

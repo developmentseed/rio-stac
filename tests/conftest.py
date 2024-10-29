@@ -1,6 +1,5 @@
 """``pytest`` configuration."""
 
-
 import pytest
 import rasterio
 
