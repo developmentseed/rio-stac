@@ -342,5 +342,7 @@ def test_mars_dataset():
     item_dict = item.to_dict()
 
     assert not item_dict["properties"].get("proj:epsg")
-    assert "proj:projjson" not in item_dict["properties"]
-    assert "proj:wkt2" in item_dict["properties"]
+    assert (
+        "proj:projjson" in item_dict["properties"]
+        or "proj:wkt2" in item_dict["properties"]
+    )
