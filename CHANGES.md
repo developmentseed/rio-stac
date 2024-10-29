@@ -1,4 +1,8 @@
 
+## 0.10.0 (2024-10-29)
+
+* handle `TIFFTAG_DATETIME` metadata for STAC datetime
+
 ## 0.9.0 (2023-12-08)
 
 * add `wkt2` representation of the dataset CRS if available (author @emileten, https://github.com/developmentseed/rio-stac/pull/55)

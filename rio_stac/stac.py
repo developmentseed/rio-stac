@@ -83,7 +83,7 @@ def get_dataset_geom(
 
 
 def get_projection_info(
-    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile]
+    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile],
 ) -> Dict:
     """Get projection metadata.
 
@@ -138,7 +138,7 @@ def get_projection_info(
 
 
 def get_eobands_info(
-    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile]
+    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile],
 ) -> List:
     """Get eo:bands metadata.
 
@@ -175,9 +175,7 @@ def _get_stats(arr: numpy.ma.MaskedArray, **kwargs: Any) -> Dict:
             "minimum": arr.min().item(),
             "maximum": arr.max().item(),
             "stddev": arr.std().item(),
-            "valid_percent": numpy.count_nonzero(~arr.mask)
-            / float(arr.data.size)
-            * 100,
+            "valid_percent": numpy.count_nonzero(~arr.mask) / float(arr.data.size) * 100,
         },
         "histogram": {
             "count": len(edges),
@@ -238,9 +236,7 @@ def get_raster_info(  # noqa: C901
             value["unit"] = src_dst.units[band - 1]
 
         value.update(
-            _get_stats(
-                src_dst.read(indexes=band, out_shape=(height, width), masked=True)
-            )
+            _get_stats(src_dst.read(indexes=band, out_shape=(height, width), masked=True))
         )
         meta.append(value)
 
@@ -248,7 +244,7 @@ def get_raster_info(  # noqa: C901
 
 
 def get_media_type(
-    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile]
+    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile],
 ) -> Optional[pystac.MediaType]:
     """Find MediaType for a raster dataset."""
     driver = src_dst.driver
@@ -364,12 +360,11 @@ def create_stac_item(
 
         if "start_datetime" not in properties and "end_datetime" not in properties:
             # Try to get datetime from https://gdal.org/user/raster_data_model.html#imagery-domain-remote-sensing
-            dst_date = src_dst.get_tag_item("ACQUISITIONDATETIME", "IMAGERY")
+            acq_date = src_dst.get_tag_item("ACQUISITIONDATETIME", "IMAGERY")
+            tiff_date = src_dst.get_tag_item("TIFFTAG_DATETIME")
+            dst_date = acq_date or tiff_date
             dst_datetime = str_to_datetime(dst_date) if dst_date else None
-
-            input_datetime = (
-                input_datetime or dst_datetime or datetime.datetime.utcnow()
-            )
+            input_datetime = input_datetime or dst_datetime or datetime.datetime.utcnow()
 
         # add projection properties
         if with_proj:
