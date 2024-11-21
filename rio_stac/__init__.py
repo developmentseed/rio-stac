@@ -1,5 +1,5 @@
 """rio-stac: Create STAC items from raster file."""
 
-__version__ = "0.10.0"
+__version__ = "0.10.1"
 
 from rio_stac.stac import create_stac_item  # noqa
