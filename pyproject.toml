@@ -20,7 +20,7 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-    "rasterio",
+    "rasterio>=1.0,!=1.4.2",
     "pystac>=1.0.0,<2.0.0",
 ]
 
