@@ -1,4 +1,8 @@
 
+## 0.10.1 (2024-11-21)
+
+* catch date parsing issue and raise warning
+
 ## 0.10.0 (2024-10-29)
 
 * handle `TIFFTAG_DATETIME` metadata for STAC datetime

@@ -357,7 +357,12 @@ def create_stac_item(
             acq_date = src_dst.get_tag_item("ACQUISITIONDATETIME", "IMAGERY")
             tiff_date = src_dst.get_tag_item("TIFFTAG_DATETIME")
             dst_date = acq_date or tiff_date
-            dst_datetime = str_to_datetime(dst_date) if dst_date else None
+            try:
+                dst_datetime = str_to_datetime(dst_date) if dst_date else None
+            except ValueError as err:
+                warnings.warn(f"Could not get parse date: {dst_date}: {err}")
+                dst_datetime = None
+
             input_datetime = input_datetime or dst_datetime or datetime.datetime.utcnow()
 
         # add projection properties
