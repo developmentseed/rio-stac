@@ -1,4 +1,10 @@
 
+## 0.11.0 (2025-04-25)
+
+* Use timezone-aware objects to represent datetimes in UTC (avoid future deprecation)
+* remove python 3.8 support
+* add python 3.13 support
+
 ## 0.10.1 (2024-11-21)
 
 * exclude rasterio version `1.4.2` from requirements
