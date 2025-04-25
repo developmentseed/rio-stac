@@ -364,7 +364,9 @@ def create_stac_item(
                 dst_datetime = None
 
             input_datetime = (
-                input_datetime or dst_datetime or datetime.datetime.now(datetime.UTC)
+                input_datetime
+                or dst_datetime
+                or datetime.datetime.now(datetime.timezone.utc)
             )
 
         # add projection properties
