@@ -12,7 +12,7 @@ from rio_stac.stac import create_stac_item
 from .conftest import requires_hdf4, requires_hdf5
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
-input_date = datetime.datetime.utcnow()
+input_date = datetime.datetime.now(datetime.timezone.utc)
 
 
 @pytest.mark.parametrize(

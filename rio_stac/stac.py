@@ -363,7 +363,11 @@ def create_stac_item(
                 warnings.warn(f"Could not get parse date: {dst_date}: {err}")
                 dst_datetime = None
 
-            input_datetime = input_datetime or dst_datetime or datetime.datetime.utcnow()
+            input_datetime = (
+                input_datetime
+                or dst_datetime
+                or datetime.datetime.now(datetime.timezone.utc)
+            )
 
         # add projection properties
         if with_proj:
