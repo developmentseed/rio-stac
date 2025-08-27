@@ -167,7 +167,9 @@ def _get_stats(arr: numpy.ma.MaskedArray, **kwargs: Any) -> Dict:
             "minimum": arr.min().item(),
             "maximum": arr.max().item(),
             "stddev": arr.std().item(),
-            "valid_percent": numpy.count_nonzero(~arr.mask) / float(arr.data.size) * 100,
+            "valid_percent": float(
+                numpy.count_nonzero(~arr.mask) / float(arr.data.size) * 100
+            ),
         },
         "histogram": {
             "count": len(edges),
