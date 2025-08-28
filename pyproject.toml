@@ -35,12 +35,13 @@ dev = [
     "pre-commit",
     "bump-my-version",
 ]
-doc = [
+docs = [
     "mkdocs",
     "mkdocs-material",
     "mkdocs-jupyter",
+    "griffe-inherited-docstrings>=1.0.0",
+    "mkdocstrings[python]>=0.25.1",
     "pygments",
-    "pdocs",
 ]
 
 [project.urls]

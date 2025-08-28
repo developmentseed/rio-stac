@@ -29,19 +29,7 @@ $ pre-commit install
 ```bash
 $ git clone https://github.com/developmentseed/rio-stac.git
 $ cd rio-stac
-$ pip install -e .["doc"]
-```
-
-Create API docs
-
-```bash
-$ pdocs as_markdown --output_dir docs/docs/api/ --exclude_source --overwrite rio_stac.stac
-```
-
-Hot-reloading docs:
-
-```bash
-$ mkdocs serve
+$ pip install -e .["docs"]
 ```
 
 To manually deploy docs (note you should never need to do this because Github

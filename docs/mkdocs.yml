@@ -31,6 +31,30 @@ plugins:
   - search
   - mkdocs-jupyter:
       include_source: True
+  - mkdocstrings:
+      enable_inventory: true
+      handlers:
+        python:
+          paths: [src]
+          options:
+            filters:
+            - "!^__post_init__"
+            docstring_section_style: list
+            docstring_style: google
+            line_length: 100
+            separate_signature: true
+            show_root_heading: true
+            show_signature_annotations: true
+            show_source: false
+            show_symbol_type_toc: true
+            signature_crossrefs: true
+            extensions:
+              - griffe_inherited_docstrings
+          import:
+            - https://docs.python.org/3/objects.inv
+            - https://numpy.org/doc/stable/objects.inv
+            - https://rasterio.readthedocs.io/en/stable/objects.inv
+            - https://docs.pydantic.dev/latest/objects.inv
 
 # Theme
 theme:
