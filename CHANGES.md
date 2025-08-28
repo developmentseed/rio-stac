@@ -1,4 +1,8 @@
 
+## 0.11.1 (2025-08-28)
+
+* avoid serialization issue for statistics
+
 ## 0.11.0 (2025-04-25)
 
 * Use timezone-aware objects to represent datetimes in UTC (avoid future deprecation)
