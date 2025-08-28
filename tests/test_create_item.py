@@ -1,6 +1,7 @@
 """test media type functions."""
 
 import datetime
+import json
 import os
 
 import pystac
@@ -346,3 +347,12 @@ def test_mars_dataset():
         "proj:projjson" in item_dict["properties"]
         or "proj:wkt2" in item_dict["properties"]
     )
+
+
+def test_json_serialization():
+    """Test JSON serialization"""
+    src_path = os.path.join(PREFIX, "dataset_cog.tif")
+    item = create_stac_item(src_path, with_raster=True)
+    assert item.validate()
+    item_dict = item.to_dict()
+    assert json.dumps(item_dict)
