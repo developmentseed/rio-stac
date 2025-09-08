@@ -356,3 +356,38 @@ def test_json_serialization():
     assert item.validate()
     item_dict = item.to_dict()
     assert json.dumps(item_dict)
+
+
+def test_stats_unique_values():
+    """issue 68 -
+    ref: https://github.com/developmentseed/rio-stac/issues/68
+    """
+    src_path = os.path.join(
+        PREFIX, "S2A_MSIL2A_20220722T105631_N0400_R094_T31TCN_20220722T171159.tif"
+    )
+    with pytest.warns(UserWarning):
+        item = create_stac_item(src_path, with_raster=True)
+    assert item.validate()
+    item_dict = item.to_dict()
+    assert "raster:bands" in item_dict["assets"]["asset"]
+    stats = item_dict["assets"]["asset"]["raster:bands"][9]["histogram"]
+    assert len(stats["buckets"]) == 3
+
+
+def test_create_item_raster_custom_histogram():
+    """Should return a valid item with raster properties."""
+    src_path = os.path.join(PREFIX, "dataset_cog.tif")
+    item = create_stac_item(
+        src_path,
+        input_datetime=input_date,
+        with_raster=True,
+        raster_max_size=128,
+        histogram_bins=5,
+        histogram_range=[0, 10],
+    )
+    assert item.validate()
+    item_dict = item.to_dict()
+    stats = item_dict["assets"]["asset"]["raster:bands"][0]["histogram"]
+    assert len(stats["buckets"]) == 5
+    assert stats["max"] == 10
+    assert stats["min"] == 0

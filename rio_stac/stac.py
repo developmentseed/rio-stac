@@ -5,7 +5,7 @@ import math
 import os
 import warnings
 from contextlib import ExitStack
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy
 import pystac
@@ -156,12 +156,16 @@ def get_eobands_info(
     return eo_bands
 
 
-def _get_stats(arr: numpy.ma.MaskedArray, **kwargs: Any) -> Dict:
+def _get_stats(
+    arr: numpy.ma.MaskedArray,
+    bins: Union[int, str, Sequence] = 10,
+    range: Optional[Tuple[float, float]] = None,
+) -> Dict:
     """Calculate array statistics."""
     # Avoid non masked nan/inf values
     numpy.ma.fix_invalid(arr, copy=False)
-    sample, edges = numpy.histogram(arr[~arr.mask])
-    return {
+
+    stats = {
         "statistics": {
             "mean": arr.mean().item(),
             "minimum": arr.min().item(),
@@ -170,19 +174,35 @@ def _get_stats(arr: numpy.ma.MaskedArray, **kwargs: Any) -> Dict:
             "valid_percent": float(
                 numpy.count_nonzero(~arr.mask) / float(arr.data.size) * 100
             ),
-        },
-        "histogram": {
-            "count": len(edges),
-            "min": float(edges.min()),
-            "max": float(edges.max()),
-            "buckets": sample.tolist(),
-        },
+        }
     }
+
+    try:
+        sample, edges = numpy.histogram(arr[~arr.mask], bins=bins, range=range)
+
+    except ValueError:
+        _, counts = numpy.unique(arr[~arr.mask], return_counts=True)
+        warnings.warn(
+            f"Could not calculate the histogram, fall back to automatic bin={len(counts) + 1}.",
+            UserWarning,
+        )
+        sample, edges = numpy.histogram(arr[~arr.mask], bins=len(counts) + 1)
+
+    stats["histogram"] = {
+        "count": len(edges),
+        "min": float(edges.min()),
+        "max": float(edges.max()),
+        "buckets": sample.tolist(),
+    }
+
+    return stats
 
 
 def get_raster_info(  # noqa: C901
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile],
     max_size: int = 1024,
+    histogram_bins: Union[int, str, Sequence] = 10,
+    histogram_range: Optional[Tuple[float, float]] = None,
 ) -> List[Dict]:
     """Get raster metadata.
 
@@ -230,7 +250,11 @@ def get_raster_info(  # noqa: C901
             value["unit"] = src_dst.units[band - 1]
 
         value.update(
-            _get_stats(src_dst.read(indexes=band, out_shape=(height, width), masked=True))
+            _get_stats(
+                src_dst.read(indexes=band, out_shape=(height, width), masked=True),
+                bins=histogram_bins,
+                range=histogram_range,
+            )
         )
         meta.append(value)
 
@@ -271,7 +295,7 @@ def get_media_type(
     elif driver == "PNG":
         return pystac.MediaType.PNG
 
-    warnings.warn("Could not determine the media type from GDAL driver.")
+    warnings.warn("Could not determine the media type from GDAL driver.", UserWarning)
     return None
 
 
@@ -295,6 +319,8 @@ def create_stac_item(
     geom_densify_pts: int = 0,
     geom_precision: int = -1,
     geographic_crs: rasterio.crs.CRS = EPSG_4326,
+    histogram_bins: Union[int, str, Sequence] = 10,
+    histogram_range: Optional[Tuple[float, float]] = None,
 ) -> pystac.Item:
     """Create a Stac Item.
 
@@ -392,7 +418,12 @@ def create_stac_item(
             )
 
             raster_info = {
-                "raster:bands": get_raster_info(dataset, max_size=raster_max_size)
+                "raster:bands": get_raster_info(
+                    dataset,
+                    max_size=raster_max_size,
+                    histogram_bins=histogram_bins,
+                    histogram_range=histogram_range,
+                )
             }
 
         eo_info: Dict[str, List] = {}
