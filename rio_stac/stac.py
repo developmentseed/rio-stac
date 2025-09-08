@@ -180,13 +180,16 @@ def _get_stats(
     try:
         sample, edges = numpy.histogram(arr[~arr.mask], bins=bins, range=range)
 
-    except ValueError:
-        _, counts = numpy.unique(arr[~arr.mask], return_counts=True)
-        warnings.warn(
-            f"Could not calculate the histogram, fall back to automatic bin={len(counts) + 1}.",
-            UserWarning,
-        )
-        sample, edges = numpy.histogram(arr[~arr.mask], bins=len(counts) + 1)
+    except ValueError as e:
+        if "Too many bins for data range." in str(e):
+            _, counts = numpy.unique(arr[~arr.mask], return_counts=True)
+            warnings.warn(
+                f"Could not calculate the histogram, fall back to automatic bin={len(counts) + 1}.",
+                UserWarning,
+            )
+            sample, edges = numpy.histogram(arr[~arr.mask], bins=len(counts) + 1)
+        else:
+            raise e
 
     stats["histogram"] = {
         "count": len(edges),

@@ -4,6 +4,7 @@ import datetime
 import json
 import os
 import sys
+import warnings
 
 import pystac
 import pytest
@@ -374,6 +375,19 @@ def test_stats_unique_values():
     assert "raster:bands" in item_dict["assets"]["asset"]
     stats = item_dict["assets"]["asset"]["raster:bands"][9]["histogram"]
     assert len(stats["buckets"]) == 3
+
+    # Should not raise warnings when bins is good
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        item = create_stac_item(src_path, with_raster=True, histogram_bins=3)
+
+    with pytest.raises(ValueError):
+        create_stac_item(
+            src_path, with_raster=True, histogram_bins=3, histogram_range=(0, -1)
+        )
+
+    with pytest.raises(ValueError):
+        create_stac_item(src_path, with_raster=True, histogram_range=(0, -1))
 
 
 def test_create_item_raster_custom_histogram():
