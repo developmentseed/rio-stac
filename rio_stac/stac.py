@@ -159,16 +159,16 @@ def get_eobands_info(
 def _get_stats(arr: numpy.ma.MaskedArray, **kwargs: Any) -> Dict:
     """Calculate array statistics."""
     # Avoid non masked nan/inf values
-    numpy.ma.fix_invalid(arr, copy=False)
-    sample, edges = numpy.histogram(arr[~arr.mask])
+    masked_arr = numpy.ma.fix_invalid(arr, copy=False)
+    sample, edges = numpy.histogram(masked_arr[~masked_arr.mask])
     return {
         "statistics": {
-            "mean": arr.mean().item(),
-            "minimum": arr.min().item(),
-            "maximum": arr.max().item(),
-            "stddev": arr.std().item(),
+            "mean": masked_arr.mean().item(),
+            "minimum": masked_arr.min().item(),
+            "maximum": masked_arr.max().item(),
+            "stddev": masked_arr.std().item(),
             "valid_percent": float(
-                numpy.count_nonzero(~arr.mask) / float(arr.data.size) * 100
+                numpy.count_nonzero(~masked_arr.mask) / float(masked_arr.data.size) * 100
             ),
         },
         "histogram": {
