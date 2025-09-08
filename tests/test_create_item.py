@@ -3,6 +3,7 @@
 import datetime
 import json
 import os
+import sys
 
 import pystac
 import pytest
@@ -358,6 +359,7 @@ def test_json_serialization():
     assert json.dumps(item_dict)
 
 
+@pytest.mark.xfail(sys.version_info < (3, 10), reason="Old numpy do not raise error")
 def test_stats_unique_values():
     """issue 68 -
     ref: https://github.com/developmentseed/rio-stac/issues/68
