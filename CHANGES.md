@@ -1,4 +1,10 @@
 
+## 0.11.2 (2025-09-09)
+
+* fix statistics for Raster with Nan/Inf values and missing Nodata
+* add `histogram_bins` and `histogram_range` options for histogram configuration
+* add fallback for histogram calculation when data is homogenous
+
 ## 0.11.1 (2025-08-28)
 
 * avoid serialization issue for statistics
