@@ -163,7 +163,7 @@ def _get_stats(
 ) -> Dict:
     """Calculate array statistics."""
     # Avoid non masked nan/inf values
-    numpy.ma.fix_invalid(arr, copy=False)
+    arr = numpy.ma.fix_invalid(arr, copy=True)
 
     stats = {
         "statistics": {
