@@ -4,11 +4,12 @@ import datetime
 import json
 import os
 
+import numpy
 import pystac
 import pytest
 import rasterio
 
-from rio_stac.stac import create_stac_item
+from rio_stac.stac import create_stac_item, get_raster_info
 
 from .conftest import requires_hdf4, requires_hdf5
 
@@ -356,3 +357,18 @@ def test_json_serialization():
     assert item.validate()
     item_dict = item.to_dict()
     assert json.dumps(item_dict)
+
+
+def test_stats_with_nan_missing_nodata():
+    """Stats should ignore nan/inf values.
+
+    Ref: https://github.com/developmentseed/rio-stac/issues/70
+    """
+    src_path = os.path.join(PREFIX, "dataset_missing_nodata_nan.tif")
+    with rasterio.open(src_path) as src:
+        arr = src.read(masked=True)
+        assert numpy.isnan(arr.max().item())
+
+        info = get_raster_info(src)
+        assert info[0]["statistics"]["minimum"] > 0
+        assert info[0]["statistics"]["maximum"] > 0
