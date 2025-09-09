@@ -159,7 +159,8 @@ def get_eobands_info(
 def _get_stats(arr: numpy.ma.MaskedArray, **kwargs: Any) -> Dict:
     """Calculate array statistics."""
     # Avoid non masked nan/inf values
-    numpy.ma.fix_invalid(arr, copy=False)
+    arr = numpy.ma.fix_invalid(arr, copy=True)
+
     sample, edges = numpy.histogram(arr[~arr.mask])
     return {
         "statistics": {
