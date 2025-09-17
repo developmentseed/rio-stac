@@ -110,7 +110,7 @@ ignore = [
 max-complexity = 14
 
 [tool.bumpversion]
-current_version = "0.11.2"
+current_version = "0.12.0"
 
 search = "{current_version}"
 replace = "{new_version}"
