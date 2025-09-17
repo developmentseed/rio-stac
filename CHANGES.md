@@ -1,4 +1,8 @@
 
+## 0.12.0 (2025-09-17)
+
+* remove python 3.9 support
+
 ## 0.11.2 (2025-09-09)
 
 * fix statistics for Raster with Nan/Inf values and missing Nodata
