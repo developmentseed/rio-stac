@@ -16,7 +16,7 @@ from rasterio.features import bounds as feature_bounds
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.vrt import WarpedVRT
 
-PROJECTION_EXT_VERSION = "v1.1.0"
+PROJECTION_EXT_VERSION = "v2.0.0"
 RASTER_EXT_VERSION = "v1.1.0"
 EO_EXT_VERSION = "v1.1.0"
 
@@ -107,7 +107,7 @@ def get_projection_info(
         epsg = src_dst.crs.to_epsg() if src_dst.crs.is_epsg_code else None
 
     meta = {
-        "epsg": epsg,
+        "code": f"EPSG:{epsg}",
         "geometry": bbox_to_geom(src_dst.bounds),
         "bbox": list(src_dst.bounds),
         "shape": [src_dst.height, src_dst.width],
