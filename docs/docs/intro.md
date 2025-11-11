@@ -104,7 +104,7 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
 
 - **eo extension** (--with-eo / --without-eo)
 
-    By default the `eo` extension and properties will be added to the item. The `eo:cloud_cover` value will be fetched from [GDAL Raster data model](https://gdal.org/user/raster_data_model) metadata.
+    By default the `eo` extension and properties will be added to the item. The `eo:cloud_cover` value will be fetched from [GDAL Raster data model](https://gdal.org/en/stable/user/raster_data_model.html) metadata.
 
     link: https://github.com/stac-extensions/eo/
 
