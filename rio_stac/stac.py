@@ -206,6 +206,7 @@ def get_raster_info(  # noqa: C901
     max_size: int = 1024,
     histogram_bins: Union[int, str, Sequence] = 10,
     histogram_range: Optional[Tuple[float, float]] = None,
+    compute_stats: bool = True,
 ) -> List[Dict]:
     """Get raster metadata.
 
@@ -252,13 +253,14 @@ def get_raster_info(  # noqa: C901
         if src_dst.units[band - 1] is not None:
             value["unit"] = src_dst.units[band - 1]
 
-        value.update(
-            _get_stats(
-                src_dst.read(indexes=band, out_shape=(height, width), masked=True),
-                bins=histogram_bins,
-                range=histogram_range,
+        if compute_stats:
+            value.update(
+                _get_stats(
+                    src_dst.read(indexes=band, out_shape=(height, width), masked=True),
+                    bins=histogram_bins,
+                    range=histogram_range,
+                )
             )
-        )
         meta.append(value)
 
     return meta
