@@ -1,12 +1,14 @@
 """Create STAC Item from a rasterio dataset."""
 
 import datetime
+import fnmatch
 import math
 import os
 import warnings
+from collections.abc import Sequence
 from contextlib import ExitStack
-from typing import Dict, List, Optional, Sequence, Tuple, Union
 
+import antimeridian
 import numpy
 import pystac
 import rasterio
@@ -16,14 +18,37 @@ from rasterio.features import bounds as feature_bounds
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.vrt import WarpedVRT
 
-PROJECTION_EXT_VERSION = "v1.1.0"
-RASTER_EXT_VERSION = "v1.1.0"
-EO_EXT_VERSION = "v1.1.0"
+PROJECTION_EXT_VERSION = "v2.0.0"
+RASTER_EXT_VERSION = "v2.0.0"
+EO_EXT_VERSION = "v2.0.0"
+
+EO_COMMON_NAME_VALUES = {
+    "pan",
+    "coastal",
+    "blue",
+    "green",
+    "green05",
+    "yellow",
+    "red",
+    "rededge",
+    "rededge071",
+    "rededge075",
+    "rededge078",
+    "nir",
+    "nir08",
+    "nir09",
+    "cirrus",
+    "swir16",
+    "swir22",
+    "lwir",
+    "lwir11",
+    "lwir12",
+}
 
 EPSG_4326 = rasterio.crs.CRS.from_epsg(4326)
 
 
-def bbox_to_geom(bbox: Tuple[float, float, float, float]) -> Dict:
+def bbox_to_geom(bbox: tuple[float, float, float, float]) -> dict:
     """Return a geojson geometry from a bbox."""
     return {
         "type": "Polygon",
@@ -40,11 +65,11 @@ def bbox_to_geom(bbox: Tuple[float, float, float, float]) -> Dict:
 
 
 def get_dataset_geom(
-    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile],
+    src_dst: DatasetReader | DatasetWriter | WarpedVRT | MemoryFile,
     densify_pts: int = 0,
     precision: int = -1,
     geographic_crs: rasterio.crs.CRS = EPSG_4326,
-) -> Dict:
+) -> dict:
     """Get Raster Footprint."""
     if densify_pts < 0:
         raise ValueError("`densify_pts` must be positive")
@@ -84,8 +109,8 @@ def get_dataset_geom(
 
 
 def get_projection_info(
-    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile],
-) -> Dict:
+    src_dst: DatasetReader | DatasetWriter | WarpedVRT | MemoryFile,
+) -> dict:
     """Get projection metadata.
 
     The STAC projection extension allows for three different ways to describe the coordinate reference system
@@ -101,20 +126,28 @@ def get_projection_info(
 
     """
 
-    epsg = None
+    code = None
     if src_dst.crs is not None:
-        # EPSG
-        epsg = src_dst.crs.to_epsg() if src_dst.crs.is_epsg_code else None
+        try:
+            authority, value = src_dst.crs.to_authority()
+            if authority and value:
+                code = f"{authority}:{value}"
+        except Exception:
+            # Fallback to EPSG if authority extraction fails
+            code = None
+        if not code and src_dst.crs.is_epsg_code:
+            epsg = src_dst.crs.to_epsg()
+            code = f"EPSG:{epsg}" if epsg else None
 
     meta = {
-        "epsg": epsg,
+        "code": code,
         "geometry": bbox_to_geom(src_dst.bounds),
         "bbox": list(src_dst.bounds),
         "shape": [src_dst.height, src_dst.width],
         "transform": list(src_dst.transform),
     }
 
-    if not epsg and src_dst.crs:
+    if not code and src_dst.crs:
         # WKT2
         try:
             meta["wkt2"] = src_dst.crs.to_wkt()
@@ -130,8 +163,8 @@ def get_projection_info(
 
 
 def get_eobands_info(
-    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile],
-) -> List:
+    src_dst: DatasetReader | DatasetWriter | WarpedVRT | MemoryFile,
+) -> list:
     """Get eo:bands metadata.
 
     see: https://github.com/stac-extensions/eo#item-properties-or-asset-fields
@@ -144,12 +177,37 @@ def get_eobands_info(
         band_meta = {"name": f"b{ix}"}
 
         descr = src_dst.descriptions[ix - 1]
-        color = colors[ix - 1].name
+        color = colors[ix - 1].name if colors else None
+        imagery_tags = src_dst.tags(ix, ns="IMAGERY") or src_dst.tags(ns="IMAGERY")
 
         # Description metadata or Colorinterp or Nothing
         description = descr or color
         if description:
             band_meta["description"] = description
+
+        for candidate in (descr, color):
+            if not candidate:
+                continue
+            common_name = candidate.strip().lower().replace(" ", "")
+            if common_name in {"gray", "grey"}:
+                common_name = "pan"
+            if common_name in EO_COMMON_NAME_VALUES:
+                band_meta["eo:common_name"] = common_name
+                break
+
+        cw = imagery_tags.get("CENTRAL_WAVELENGTH_UM")
+        if cw is not None:
+            try:
+                band_meta["eo:center_wavelength"] = float(cw)
+            except ValueError:
+                pass
+
+        fwhm = imagery_tags.get("FWHM_UM")
+        if fwhm is not None:
+            try:
+                band_meta["eo:full_width_half_max"] = float(fwhm)
+            except ValueError:
+                pass
 
         eo_bands.append(band_meta)
 
@@ -158,9 +216,9 @@ def get_eobands_info(
 
 def _get_stats(
     arr: numpy.ma.MaskedArray,
-    bins: Union[int, str, Sequence] = 10,
-    range: Optional[Tuple[float, float]] = None,
-) -> Dict:
+    bins: int | str | Sequence = 10,
+    range: tuple[float, float] | None = None,
+) -> dict:
     """Calculate array statistics."""
     # Avoid non masked nan/inf values
     arr = numpy.ma.fix_invalid(arr, copy=True)
@@ -191,7 +249,7 @@ def _get_stats(
         else:
             raise e
 
-    stats["histogram"] = {
+    stats["raster:histogram"] = {
         "count": len(edges),
         "min": float(edges.min()),
         "max": float(edges.max()),
@@ -201,12 +259,12 @@ def _get_stats(
     return stats
 
 
-def get_raster_info(  # noqa: C901
-    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile],
+def get_raster_info(
+    src_dst: DatasetReader | DatasetWriter | WarpedVRT | MemoryFile,
     max_size: int = 1024,
-    histogram_bins: Union[int, str, Sequence] = 10,
-    histogram_range: Optional[Tuple[float, float]] = None,
-) -> List[Dict]:
+    histogram_bins: int | str | Sequence = 10,
+    histogram_range: tuple[float, float] | None = None,
+) -> list[dict]:
     """Get raster metadata.
 
     see: https://github.com/stac-extensions/raster#raster-band-object
@@ -224,19 +282,20 @@ def get_raster_info(  # noqa: C901
                 width = max_size
                 height = math.ceil(width * ratio)
 
-    meta: List[Dict] = []
+    meta: list[dict] = []
 
     area_or_point = src_dst.tags().get("AREA_OR_POINT", "").lower()
 
     # Missing `bits_per_sample` and `spatial_resolution`
     for band in src_dst.indexes:
         value = {
+            "name": f"b{band}",
             "data_type": src_dst.dtypes[band - 1],
-            "scale": src_dst.scales[band - 1],
-            "offset": src_dst.offsets[band - 1],
+            "raster:scale": src_dst.scales[band - 1],
+            "raster:offset": src_dst.offsets[band - 1],
         }
         if area_or_point:
-            value["sampling"] = area_or_point
+            value["raster:sampling"] = area_or_point
 
         # If the Nodata is not set we don't forward it.
         if src_dst.nodata is not None:
@@ -265,8 +324,8 @@ def get_raster_info(  # noqa: C901
 
 
 def get_media_type(
-    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT, MemoryFile],
-) -> Optional[pystac.MediaType]:
+    src_dst: DatasetReader | DatasetWriter | WarpedVRT | MemoryFile,
+) -> pystac.MediaType | None:
     """Find MediaType for a raster dataset."""
     driver = src_dst.driver
 
@@ -302,28 +361,232 @@ def get_media_type(
     return None
 
 
-def create_stac_item(
-    source: Union[str, DatasetReader, DatasetWriter, WarpedVRT, MemoryFile],
-    input_datetime: Optional[datetime.datetime] = None,
-    extensions: Optional[List[str]] = None,
-    collection: Optional[str] = None,
-    collection_url: Optional[str] = None,
-    properties: Optional[Dict] = None,
-    id: Optional[str] = None,
-    assets: Optional[Dict[str, pystac.Asset]] = None,
-    asset_name: str = "asset",
-    asset_roles: Optional[List[str]] = None,
-    asset_media_type: Optional[Union[str, pystac.MediaType]] = "auto",
-    asset_href: Optional[str] = None,
+def build_stac_assets(
+    directory: str | None = None,
+    paths: list[str] | None = None,
+    patterns: list[str] | None = None,
+    asset_media_type: str | pystac.MediaType | None = "auto",
+    with_proj: bool = True,
+    with_raster: bool = False,
+    with_eo: bool = False,
+    raster_max_size: int = 1024,
+    histogram_bins: int | str | Sequence = 10,
+    histogram_range: tuple[float, float] | None = None,
+) -> dict[str, pystac.Asset]:
+    """Build STAC Assets from files."""
+    assets = {}
+    files = []
+
+    if paths:
+        files.extend(paths)
+
+    if directory:
+        for root, _, filenames in os.walk(directory):
+            for f in filenames:
+                if f.startswith("."):
+                    continue
+                files.append(os.path.join(root, f))
+
+    filtered_files = []
+    if patterns:
+        for f in files:
+            matched = False
+            rel_path = os.path.relpath(f, directory) if directory else f
+            filename = os.path.basename(f)
+            
+            for pattern in patterns:
+                if "/" in pattern or os.sep in pattern:
+                    if fnmatch.fnmatch(rel_path, pattern):
+                        matched = True
+                        break
+                else:
+                    if fnmatch.fnmatch(filename, pattern):
+                        matched = True
+                        break
+            
+            if matched:
+                filtered_files.append(f)
+    else:
+        filtered_files = files
+
+    for fpath in filtered_files:
+        if not os.path.isfile(fpath):
+            continue
+
+        if directory and fpath.startswith(directory):
+             href = os.path.relpath(fpath, directory)
+        else:
+             href = os.path.basename(fpath)
+
+        key = os.path.splitext(os.path.basename(fpath))[0]
+
+        # Check for Metadata (JSON/XML/SAFE)
+        if fpath.lower().endswith((".json", ".xml", ".safe")):
+            mtype = (
+                pystac.MediaType.JSON
+                if fpath.lower().endswith(".json")
+                else pystac.MediaType.XML
+            )
+            assets[key] = pystac.Asset(
+                href=href, media_type=mtype, roles=["metadata"]
+            )
+            continue
+
+        # Check for Sentinel-2 Quicklook
+        if fpath.lower().endswith("ql.jpg") or fpath.lower().endswith("ql.jpeg"):
+             assets[key] = pystac.Asset(
+                href=href,
+                media_type=pystac.MediaType.JPEG,
+                roles=["thumbnail"],
+             )
+             continue
+
+        # Try Raster
+        try:
+            with rasterio.open(fpath) as src:
+                # Logic Rule 1: No CRS and 3 bands -> thumbnail
+                roles = ["data"]
+                if src.crs is None and src.count == 3:
+                    roles = ["thumbnail"]
+
+                # Use create_stac_asset logic
+                asset, _ = create_stac_asset(
+                    source=src,
+                    asset_href=href,
+                    asset_roles=roles,
+                    asset_media_type=asset_media_type,
+                    with_proj=with_proj,
+                    with_raster=with_raster,
+                    with_eo=with_eo,
+                    raster_max_size=raster_max_size,
+                    histogram_bins=histogram_bins,
+                    histogram_range=histogram_range,
+                )
+                assets[key] = asset
+
+        except rasterio.errors.RasterioIOError:
+            # Not a supported raster
+            continue
+        except Exception:
+            continue
+
+    return assets
+
+
+def create_stac_asset(
+    source: str | DatasetReader | DatasetWriter | WarpedVRT | MemoryFile,
+    asset_roles: list[str] | None = None,
+    asset_media_type: str | pystac.MediaType | None = "auto",
+    asset_href: str | None = None,
     with_proj: bool = False,
     with_raster: bool = False,
     with_eo: bool = False,
     raster_max_size: int = 1024,
+    histogram_bins: int | str | Sequence = 10,
+    histogram_range: tuple[float, float] | None = None,
+) -> tuple[pystac.Asset, list[dict]]:
+    """Create a Stac Asset.
+
+    Args:
+        source (str or opened rasterio dataset): input path or rasterio dataset.
+        asset_roles (list of str, optional): list of str | list of asset's roles.
+        asset_media_type (str or pystac.MediaType, optional): asset's media type.
+        asset_href (str, optional): asset's URI (default to input path).
+        with_proj (bool): Add the `projection` extension and properties (default to False).
+        with_raster (bool): Add the `raster` extension and properties (default to False).
+        with_eo (bool): Add the `eo` extension and properties (default to False).
+        raster_max_size (int): Limit array size from which to get the raster statistics. Defaults to 1024.
+
+    Returns:
+        pystac.Asset: valid STAC Asset.
+        list: list of bands metadata.
+
+    """
+    asset_roles = asset_roles or []
+
+    with ExitStack() as ctx:
+        if isinstance(source, (DatasetReader, DatasetWriter, WarpedVRT)):
+            dataset = source
+        else:
+            dataset = ctx.enter_context(rasterio.open(source))
+
+        media_type = (
+            get_media_type(dataset) if asset_media_type == "auto" else asset_media_type
+        )
+
+        extra_fields = {}
+
+        # add projection properties
+        if with_proj:
+             proj_info = get_projection_info(dataset)
+             proj_info.pop("geometry", None)
+             extra_fields.update({
+                f"proj:{name}": value
+                for name, value in proj_info.items()
+             })
+
+        # add raster properties
+        raster_bands: list[dict] = []
+        if with_raster:
+            raster_bands = get_raster_info(
+                dataset,
+                max_size=raster_max_size,
+                histogram_bins=histogram_bins,
+                histogram_range=histogram_range,
+            )
+
+        eo_bands: list[dict] = []
+        if with_eo:
+            eo_bands = get_eobands_info(dataset)
+
+        bands: list[dict] = []
+        if raster_bands or eo_bands:
+            band_count = max(len(raster_bands), len(eo_bands))
+            for idx in range(band_count):
+                band: dict = {}
+                if idx < len(eo_bands):
+                    band.update(eo_bands[idx])
+                if idx < len(raster_bands):
+                    band.update(raster_bands[idx])
+                band.setdefault("name", f"b{idx + 1}")
+                bands.append(band)
+
+            extra_fields["bands"] = bands
+
+    return (
+        pystac.Asset(
+            href=asset_href or dataset.name,
+            media_type=media_type,
+            extra_fields=extra_fields,
+            roles=asset_roles,
+        ),
+        bands,
+    )
+
+
+def create_stac_item(
+    source: str | DatasetReader | DatasetWriter | WarpedVRT | MemoryFile,
+    input_datetime: datetime.datetime | None = None,
+    extensions: list[str] | None = None,
+    collection: str | None = None,
+    collection_url: str | None = None,
+    properties: dict | None = None,
+    id: str | None = None,
+    assets: dict[str, pystac.Asset] | None = None,
+    asset_name: str = "asset",
+    asset_roles: list[str] | None = None,
+    asset_media_type: str | pystac.MediaType | None = "auto",
+    asset_href: str | None = None,
+    with_proj: bool = False,
+    with_raster: bool = False,
+    with_eo: bool = False,
+    with_private: bool = False,
+    raster_max_size: int = 1024,
     geom_densify_pts: int = 0,
     geom_precision: int = -1,
     geographic_crs: rasterio.crs.CRS = EPSG_4326,
-    histogram_bins: Union[int, str, Sequence] = 10,
-    histogram_range: Optional[Tuple[float, float]] = None,
+    histogram_bins: int | str | Sequence = 10,
+    histogram_range: tuple[float, float] | None = None,
 ) -> pystac.Item:
     """Create a Stac Item.
 
@@ -343,6 +606,7 @@ def create_stac_item(
         with_proj (bool): Add the `projection` extension and properties (default to False).
         with_raster (bool): Add the `raster` extension and properties (default to False).
         with_eo (bool): Add the `eo` extension and properties (default to False).
+        with_private (bool): Add the `_pivate` entry (default to False).
         raster_max_size (int): Limit array size from which to get the raster statistics. Defaults to 1024.
         geom_densify_pts (int): Number of points to add to each edge to account for nonlinear edges transformation (Note: GDAL uses 21).
         geom_precision (int): If >= 0, geometry coordinates will be rounded to this number of decimal.
@@ -379,10 +643,6 @@ def create_stac_item(
             geographic_crs=geographic_crs,
         )
 
-        media_type = (
-            get_media_type(dataset) if asset_media_type == "auto" else asset_media_type
-        )
-
         if "start_datetime" not in properties and "end_datetime" not in properties:
             # Try to get datetime from https://gdal.org/user/raster_data_model.html#imagery-domain-remote-sensing
             acq_date = src_dst.get_tag_item("ACQUISITIONDATETIME", "IMAGERY")
@@ -400,57 +660,73 @@ def create_stac_item(
                 or datetime.datetime.now(datetime.timezone.utc)
             )
 
+        satellite_id = src_dst.get_tag_item("SATELLITEID", "IMAGERY")
+        if satellite_id and "platform" not in properties:
+            properties["platform"] = satellite_id
+
         # add projection properties
         if with_proj:
             extensions.append(
                 f"https://stac-extensions.github.io/projection/{PROJECTION_EXT_VERSION}/schema.json",
             )
 
-            properties.update(
-                {
-                    f"proj:{name}": value
-                    for name, value in get_projection_info(src_dst).items()
-                }
-            )
-
-        # add raster properties
-        raster_info = {}
+        # Check if we need to add other extensions
         if with_raster:
             extensions.append(
                 f"https://stac-extensions.github.io/raster/{RASTER_EXT_VERSION}/schema.json",
             )
 
-            raster_info = {
-                "raster:bands": get_raster_info(
-                    dataset,
-                    max_size=raster_max_size,
-                    histogram_bins=histogram_bins,
-                    histogram_range=histogram_range,
-                )
-            }
-
-        eo_info: Dict[str, List] = {}
         if with_eo:
             extensions.append(
                 f"https://stac-extensions.github.io/eo/{EO_EXT_VERSION}/schema.json",
             )
 
-            eo_info = {"eo:bands": get_eobands_info(src_dst)}
-
             cloudcover = src_dst.get_tag_item("CLOUDCOVER", "IMAGERY")
             if cloudcover is not None:
                 properties.update({"eo:cloud_cover": int(cloudcover)})
 
+        extensions = list(dict.fromkeys(extensions))
+
+        # item.assets
+        generated_asset = None
+        if not assets:
+            generated_asset, _ = create_stac_asset(
+                source=dataset,
+                asset_roles=asset_roles,
+                asset_media_type=asset_media_type,
+                asset_href=asset_href,
+                with_proj=with_proj,
+                with_raster=with_raster,
+                with_eo=with_eo,
+                raster_max_size=raster_max_size,
+                histogram_bins=histogram_bins,
+                histogram_range=histogram_range,
+            )
+
+    # Fix Antimeridian
+    fixed_geom = antimeridian.fix_geojson(dataset_geom["footprint"])
+    fixed_bbox = list(feature_bounds(fixed_geom))
+
     # item
     item = pystac.Item(
         id=id or os.path.basename(dataset.name),
-        geometry=dataset_geom["footprint"],
-        bbox=dataset_geom["bbox"],
+        geometry=fixed_geom,
+        bbox=fixed_bbox,
         collection=collection,
         stac_extensions=extensions,
         datetime=input_datetime,
         properties=properties,
     )
+
+    if with_private:
+        private_data = properties.get("_private")
+        if private_data is None:
+            private_data = {}
+        if not isinstance(private_data, dict):
+            raise ValueError("The `_private` property must be a JSON object when set.")
+
+        private_data.setdefault("hidden", True)
+        properties["_private"] = private_data
 
     # if we add a collection we MUST add a link
     if collection:
@@ -462,20 +738,64 @@ def create_stac_item(
             )
         )
 
-    # item.assets
     if assets:
         for key, asset in assets.items():
             item.add_asset(key=key, asset=asset)
 
-    else:
-        item.add_asset(
-            key=asset_name,
-            asset=pystac.Asset(
-                href=asset_href or dataset.name,
-                media_type=media_type,
-                extra_fields={**raster_info, **eo_info},
-                roles=asset_roles,
-            ),
-        )
+    elif generated_asset:
+        item.add_asset(key=asset_name, asset=generated_asset)
+
+    # Post-processing cleanups (General Best Practices)
+    # 1. Clean Thumbnail
+    # Find asset with 'thumbnail' role or matching name pattern if not set
+    thumb_key = None
+    for key, asset in item.assets.items():
+        if "thumbnail" in (asset.roles or []) or key.endswith("ql") or "-ql" in key:
+            thumb_key = key
+            break
+
+    if thumb_key:
+        thumb = item.assets.pop(thumb_key)
+        # Set required
+        thumb.title = "thumbnail"
+        thumb.description = "thumbnail"
+
+        # Ensure roles
+        if not thumb.roles:
+             thumb.roles = ["thumbnail", "overview"]
+        else:
+             if "thumbnail" not in thumb.roles:
+                 thumb.roles.append("thumbnail")
+             if "overview" not in thumb.roles:
+                 thumb.roles.append("overview")
+
+        thumb.extra_fields["proj:code"] = None
+
+        # Remove forbidden fields
+        for k in ["bands", "eo:bands", "raster:bands", "statistics", "stats",
+                  "proj:epsg", "proj:shape", "proj:bbox", "proj:transform",
+                  "proj:geometry", "proj:wkt2", "proj:projjson"]:
+            thumb.extra_fields.pop(k, None)
+
+        # Check if they are in extra_fields keys (e.g. other proj: fields)
+        keys_to_pop = [ek for ek in thumb.extra_fields if ek.startswith("proj:") and ek != "proj:code"]
+        for ek in keys_to_pop:
+            thumb.extra_fields.pop(ek)
+
+        # Re-add as 'thumbnail'
+        item.assets["thumbnail"] = thumb
+
+    # 2. Clean Metadata Assets (No proj:*)
+    for _, asset in item.assets.items():
+        if "metadata" in (asset.roles or []):
+             keys_to_pop = [k for k in asset.extra_fields if k.startswith("proj:")]
+             for k in keys_to_pop:
+                 asset.extra_fields.pop(k)
+
+    # 3. Clean Item Properties (No proj:*)
+    # Remove proj:* from item properties (moved to assets)
+    keys_to_remove = [k for k in item.properties if k.startswith("proj:")]
+    for k in keys_to_remove:
+        item.properties.pop(k)
 
     return item

@@ -52,10 +52,48 @@ $ pip install git+http://github.com/developmentseed/rio-stac
 // rio stac tests/fixtures/dataset_cog.tif | jq
 {
   "type": "Feature",
-  "stac_version": "1.0.0",
+  "stac_version": "1.1.0",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/projection/v2.0.0/schema.json",
+    "https://stac-extensions.github.io/raster/v2.0.0/schema.json",
+    "https://stac-extensions.github.io/eo/v2.0.0/schema.json"
+  ],
   "id": "dataset_cog.tif",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+          -60.72634617297825,
+          72.23689137791739
+        ],
+        [
+          -52.91627525610924,
+          72.22979795551834
+        ],
+        [
+          -52.301598718454485,
+          74.61378388950398
+        ],
+        [
+          -61.28762442711404,
+          74.62204314252978
+        ],
+        [
+          -60.72634617297825,
+          72.23689137791739
+        ]
+      ]
+    ]
+  },
+  "bbox": [
+    -61.28762442711404,
+    72.22979795551834,
+    -52.301598718454485,
+    74.62204314252978
+  ],
   "properties": {
-    "proj:epsg": 32621,
+    "proj:code": "EPSG:32621",
     "proj:geometry": {
       "type": "Polygon",
       "coordinates": [
@@ -104,170 +142,30 @@ $ pip install git+http://github.com/developmentseed/rio-stac
       0.0,
       1.0
     ],
-    "proj:projjson": {
-      "$schema": "https://proj.org/schemas/v0.4/projjson.schema.json",
-      "type": "ProjectedCRS",
-      "name": "WGS 84 / UTM zone 21N",
-      "base_crs": {
-        "name": "WGS 84",
-        "datum": {
-          "type": "GeodeticReferenceFrame",
-          "name": "World Geodetic System 1984",
-          "ellipsoid": {
-            "name": "WGS 84",
-            "semi_major_axis": 6378137,
-            "inverse_flattening": 298.257223563
-          }
-        },
-        "coordinate_system": {
-          "subtype": "ellipsoidal",
-          "axis": [
-            {
-              "name": "Geodetic latitude",
-              "abbreviation": "Lat",
-              "direction": "north",
-              "unit": "degree"
-            },
-            {
-              "name": "Geodetic longitude",
-              "abbreviation": "Lon",
-              "direction": "east",
-              "unit": "degree"
-            }
-          ]
-        },
-        "id": {
-          "authority": "EPSG",
-          "code": 4326
-        }
-      },
-      "conversion": {
-        "name": "UTM zone 21N",
-        "method": {
-          "name": "Transverse Mercator",
-          "id": {
-            "authority": "EPSG",
-            "code": 9807
-          }
-        },
-        "parameters": [
-          {
-            "name": "Latitude of natural origin",
-            "value": 0,
-            "unit": "degree",
-            "id": {
-              "authority": "EPSG",
-              "code": 8801
-            }
-          },
-          {
-            "name": "Longitude of natural origin",
-            "value": -57,
-            "unit": "degree",
-            "id": {
-              "authority": "EPSG",
-              "code": 8802
-            }
-          },
-          {
-            "name": "Scale factor at natural origin",
-            "value": 0.9996,
-            "unit": "unity",
-            "id": {
-              "authority": "EPSG",
-              "code": 8805
-            }
-          },
-          {
-            "name": "False easting",
-            "value": 500000,
-            "unit": "metre",
-            "id": {
-              "authority": "EPSG",
-              "code": 8806
-            }
-          },
-          {
-            "name": "False northing",
-            "value": 0,
-            "unit": "metre",
-            "id": {
-              "authority": "EPSG",
-              "code": 8807
-            }
-          }
-        ]
-      },
-      "coordinate_system": {
-        "subtype": "Cartesian",
-        "axis": [
-          {
-            "name": "Easting",
-            "abbreviation": "",
-            "direction": "east",
-            "unit": "metre"
-          },
-          {
-            "name": "Northing",
-            "abbreviation": "",
-            "direction": "north",
-            "unit": "metre"
-          }
-        ]
-      },
-      "id": {
-        "authority": "EPSG",
-        "code": 32621
-      }
-    },
-    "proj:wkt2": "PROJCS[\"WGS 84 / UTM zone 21N\",GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",-57],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"32621\"]]",
-    "datetime": "2023-12-08T09:30:38.153261Z"
-  },
-  "geometry": {
-    "type": "Polygon",
-    "coordinates": [
-      [
-        [
-          -60.72634617297825,
-          72.23689137791739
-        ],
-        [
-          -52.91627525610924,
-          72.22979795551834
-        ],
-        [
-          -52.301598718454485,
-          74.61378388950398
-        ],
-        [
-          -61.28762442711404,
-          74.62204314252978
-        ],
-        [
-          -60.72634617297825,
-          72.23689137791739
-        ]
-      ]
-    ]
+    "datetime": "2025-11-28T13:12:58.968562Z"
   },
   "links": [],
   "assets": {
     "asset": {
-      "href": "/Users/vincentsarago/Dev/DevSeed/rio-stac/tests/fixtures/dataset_cog.tif",
-      "raster:bands": [
+      "href": "tests/fixtures/dataset_cog.tif",
+      "type": "image/tiff; application=geotiff",
+      "bands": [
         {
+          "name": "b1",
+          "description": "gray",
+          "eo:common_name": "pan",
           "data_type": "uint16",
-          "scale": 1.0,
-          "offset": 0.0,
-          "sampling": "point",
+          "raster:scale": 1.0,
+          "raster:offset": 0.0,
+          "raster:sampling": "point",
           "statistics": {
             "mean": 2107.524612053134,
             "minimum": 1,
             "maximum": 7872,
-            "stddev": 2271.0065537857326,
-            "valid_percent": 0.00009564764936336924
+            "stddev": 2271.006553785732,
+            "valid_percent": 9.564764936336924e-05
           },
-          "histogram": {
+          "raster:histogram": {
             "count": 11,
             "min": 1.0,
             "max": 7872.0,
@@ -286,30 +184,27 @@ $ pip install git+http://github.com/developmentseed/rio-stac
           }
         }
       ],
-      "eo:bands": [
-        {
-          "name": "b1",
-          "description": "gray"
-        }
-      ],
       "roles": []
     }
-  },
-  "bbox": [
-    -61.28762442711404,
-    72.22979795551834,
-    -52.301598718454485,
-    74.62204314252978
-  ],
-  "stac_extensions": [
-    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
-    "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
-    "https://stac-extensions.github.io/eo/v1.1.0/schema.json"
-  ]
+  }
 }
 ```
 
+
 See https://developmentseed.org/rio-stac/intro/ for more.
+
+### Directory Input Example
+
+`rio-stac` can also process a directory of files to create a single STAC Item with multiple assets using the `--recursive` flag.
+
+```bash
+$ rio stac /path/to/directory --recursive --pattern "*.tif" --pattern "*.json"
+```
+
+-   The directory name becomes the Item ID.
+-   `.tif` files are added as data assets.
+-   `.json` files are added as metadata assets.
+-   3-band non-georeferenced images are auto-detected as thumbnails.
 
 ## Contribution & Development
 

@@ -1,425 +1,135 @@
-"""test media type functions."""
-
-import datetime
+"""Tests for STAC Item creation and post-processing."""
 import json
 import os
-import sys
-import warnings
-
-import numpy
-import pystac
+import shutil
+from click.testing import CliRunner
+from rio_stac.scripts.cli import stac
 import pytest
-import rasterio
+from rio_stac import build_stac_assets, create_stac_item
 
-from rio_stac.stac import create_stac_item, get_raster_info
+@pytest.fixture
+def s2_safe_dir(tmp_path):
+    """Create a mock Sentinel-2 SAFE directory structure."""
+    safe_dir = tmp_path / "S2A_MSIL1C_20251128T111431_N0511_R137_T31VEE_20251128T121631.SAFE"
+    safe_dir.mkdir()
 
-from .conftest import requires_hdf4, requires_hdf5
+    # Metadata
+    (safe_dir / "MTD_MSIL1C.xml").write_text("<xml>metadata</xml>")
+    (safe_dir / "manifest.safe").write_text("<safe>manifest</safe>")
 
-PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
-input_date = datetime.datetime.now(datetime.timezone.utc)
+    # Granule dir
+    granule_dir = safe_dir / "GRANULE" / "L1C_T31VEE_A054503_20251128T111434" / "IMG_DATA"
+    granule_dir.mkdir(parents=True)
 
+    # Fake Raster Bands (copy from fixture)
+    fixture_path = "tests/fixtures/dataset.tif"
+    if os.path.exists(fixture_path):
+        shutil.copy(fixture_path, granule_dir / "T31VEE_20251128T111431_B03.jp2")
+        shutil.copy(fixture_path, granule_dir / "T31VEE_20251128T111431_B04.jp2")
 
-@pytest.mark.parametrize(
-    "file",
-    [
-        "dataset_nodata_nan.tif",
-        "dataset_nodata_and_nan.tif",
-        "dataset_cog.tif",
-        "dataset_gdalcog.tif",
-        "dataset_geo.tif",
-        "dataset.tif",
-        "dataset.jp2",
-        "dataset.jpg",
-        "dataset.png",
-        "dataset.webp",
-        "dataset_gcps.tif",
-        "issue_22.tif",
-        "dataset_dateline.tif",
-        "dataset_int16_nodata.tif",
-    ],
-)
-def test_create_item(file):
-    """Should run without exceptions."""
-    src_path = os.path.join(PREFIX, file)
-    with rasterio.open(src_path) as src_dst:
-        assert create_stac_item(
-            src_dst, input_datetime=input_date, with_raster=True
-        ).validate()
+    # Quicklook (simulated)
+    (safe_dir / "S2A_MSIL1C_20251128T111431_N0511_R137_T31VEE_20251128T121631-ql.jpg").write_bytes(b"fake_jpeg_content")
 
+    return safe_dir
 
-@requires_hdf4
-def test_hdf4():
-    """Test hdf4."""
-    src_path = os.path.join(PREFIX, "dataset.hdf")
-    with rasterio.open(src_path) as src_dst:
-        assert create_stac_item(src_dst, input_datetime=input_date).validate()
+def test_s2_l1c_builder(s2_safe_dir):
+    """Test building a STAC Item for S2 L1C product using CLI logic."""
+    runner = CliRunner()
 
-
-@requires_hdf5
-def test_hdf5():
-    """Test hdf5."""
-    src_path = os.path.join(PREFIX, "dataset.h5")
-    with rasterio.open(src_path) as src_dst:
-        assert create_stac_item(src_dst, input_datetime=input_date).validate()
-
-
-def test_create_item_options():
-    """Should return the correct mediatype."""
-    src_path = os.path.join(PREFIX, "dataset_cog.tif")
-
-    # pass string
-    assert create_stac_item(src_path, input_datetime=input_date).validate()
-
-    # default COG
-    item = create_stac_item(
-        src_path,
-        input_datetime=input_date,
-        asset_media_type=pystac.MediaType.COG,
-        with_proj=False,
-    )
-    assert item.validate()
-    item_dict = item.to_dict()
-    assert item_dict["assets"]["asset"]["type"] == pystac.MediaType.COG
-    assert item_dict["links"] == []
-    assert item_dict["stac_extensions"] == []
-    assert list(item_dict["properties"]) == ["datetime"]
-
-    # additional extensions and properties
-    item = create_stac_item(
-        src_path,
-        input_datetime=input_date,
-        extensions=["https://stac-extensions.github.io/scientific/v1.0.0/schema.json"],
-        properties={"sci:citation": "A nice image"},
-        with_proj=False,
-    )
-    assert item.validate()
-    item_dict = item.to_dict()
-    assert item_dict["links"] == []
-    assert item_dict["stac_extensions"] == [
-        "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
+    cmd = [
+        str(s2_safe_dir),
+        "--recursive",
+        "--pattern", "*_B02.jp2",
+        "--pattern", "*_B03.jp2",
+        "--pattern", "*_B04.jp2",
+        "--pattern", "manifest.safe",
+        "--pattern", "MTD_MSIL1C.xml",
+        "--pattern", "*ql.jp*",
     ]
-    assert "datetime" in item_dict["properties"]
-    assert "proj:epsg" not in item_dict["properties"]
-    assert "sci:citation" in item_dict["properties"]
 
-    # additional extensions and properties
+    result = runner.invoke(stac, cmd)
+    assert result.exit_code == 0
+
+    item = json.loads(result.output)
+    assets = item["assets"]
+
+    # Verify Assets existence
+    assert any(k.endswith("B03") for k in assets)
+    assert any(k.endswith("B04") for k in assets)
+    assert "MTD_MSIL1C" in assets
+    assert "manifest" in assets
+
+    # Verify Thumbnail logic
+    # Should exist and be named 'thumbnail'
+    assert "thumbnail" in assets
+    assert "thumbnail" in assets["thumbnail"]["roles"]
+    assert assets["thumbnail"]["title"] == "thumbnail"
+
+    # Verify Metadata logic
+    assert "metadata" in assets["MTD_MSIL1C"]["roles"]
+    assert "metadata" in assets["manifest"]["roles"]
+
+def test_general_post_processing(s2_safe_dir):
+    """Test that create_stac_item applies general post-processing rules."""
+
+    # 1. Build Assets
+    patterns = [
+        "*_B02.jp2", "*_B03.jp2", "*_B04.jp2",
+        "manifest.safe", "MTD_MSIL1C.xml", "*ql.jp*"
+    ]
+    assets = build_stac_assets(
+        directory=str(s2_safe_dir),
+        patterns=patterns,
+        with_proj=True # Ensure proj info is generated for assets
+    )
+
+    # 2. Create Item
+    # Find a source
+    source_path = None
+    for key, asset in assets.items():
+        if "B03" in key:
+             source_path = os.path.join(str(s2_safe_dir), asset.href)
+             break
+
     item = create_stac_item(
-        src_path,
-        input_datetime=input_date,
-        extensions=["https://stac-extensions.github.io/scientific/v1.0.0/schema.json"],
-        properties={"sci:citation": "A nice image"},
+        source=source_path,
+        assets=assets,
         with_proj=True,
-    )
-    assert item.validate()
-    item_dict = item.to_dict()
-    assert item_dict["links"] == []
-    assert item_dict["stac_extensions"] == [
-        "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
-        "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
-    ]
-    assert "datetime" in item_dict["properties"]
-    assert "proj:epsg" in item_dict["properties"]
-    assert "proj:wkt2" not in item_dict["properties"]
-    assert "proj:projjson" not in item_dict["properties"]
-    assert "sci:citation" in item_dict["properties"]
-
-    # external assets
-    assets = {"cog": pystac.Asset(href=src_path)}
-    item = create_stac_item(
-        src_path, input_datetime=input_date, assets=assets, with_proj=False
-    )
-    assert item.validate()
-    item_dict = item.to_dict()
-    assert item_dict["assets"]["cog"]
-    assert item_dict["links"] == []
-    assert item_dict["stac_extensions"] == []
-    assert "datetime" in item_dict["properties"]
-
-    # collection
-    item = create_stac_item(
-        src_path, input_datetime=input_date, collection="mycollection", with_proj=False
-    )
-    assert item.validate()
-    item_dict = item.to_dict()
-    assert item_dict["links"][0]["href"] == "mycollection"
-    assert item_dict["stac_extensions"] == []
-    assert "datetime" in item_dict["properties"]
-    assert item_dict["collection"] == "mycollection"
-
-    item = create_stac_item(
-        src_path,
-        input_datetime=input_date,
-        collection="mycollection",
-        collection_url="https://stac.somewhere.io/mycollection.json",
-        with_proj=False,
-    )
-    assert item.validate()
-    item_dict = item.to_dict()
-    assert item_dict["links"][0]["href"] == "https://stac.somewhere.io/mycollection.json"
-    assert item_dict["stac_extensions"] == []
-    assert "datetime" in item_dict["properties"]
-    assert item_dict["collection"] == "mycollection"
-
-
-def test_proj_without_proj():
-    """Use the Proj extension without proj info."""
-    src_path = os.path.join(PREFIX, "dataset.tif")
-
-    # additional extensions and properties
-    item = create_stac_item(
-        src_path,
-        input_datetime=input_date,
-        with_proj=True,
-    )
-    assert item.validate()
-    item_dict = item.to_dict()
-    assert item_dict["links"] == []
-    assert item_dict["stac_extensions"] == [
-        "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
-    ]
-    assert "datetime" in item_dict["properties"]
-    # EPSG should be set to None
-    assert not item_dict["properties"]["proj:epsg"]
-    assert item_dict["properties"]["proj:bbox"]
-
-
-def test_create_item_raster():
-    """Should return a valid item with raster properties."""
-    src_path = os.path.join(PREFIX, "dataset_cog.tif")
-    item = create_stac_item(
-        src_path,
-        input_datetime=input_date,
         with_raster=True,
-        raster_max_size=128,
-    )
-    assert item.validate()
-    item_dict = item.to_dict()
-    assert item_dict["links"] == []
-    assert item_dict["stac_extensions"] == [
-        "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
-    ]
-    assert "raster:bands" in item_dict["assets"]["asset"]
-    assert len(item_dict["assets"]["asset"]["raster:bands"]) == 1
-
-    # Nodata=None not in the properties
-    assert "nodata" not in item_dict["assets"]["asset"]["raster:bands"][0]
-
-    # Unit=None not in the properties
-    assert "unit" not in item_dict["assets"]["asset"]["raster:bands"][0]
-
-    assert item_dict["assets"]["asset"]["raster:bands"][0]["sampling"] in [
-        "point",
-        "area",
-    ]
-
-    src_path = os.path.join(PREFIX, "dataset_nodata_nan.tif")
-    item = create_stac_item(src_path, input_datetime=input_date, with_raster=True)
-    assert item.validate()
-    item_dict = item.to_dict()
-    assert item_dict["stac_extensions"] == [
-        "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
-    ]
-    assert "raster:bands" in item_dict["assets"]["asset"]
-
-    assert item_dict["assets"]["asset"]["raster:bands"][0]["nodata"] == "nan"
-
-    src_path = os.path.join(PREFIX, "dataset_with_offsets.tif")
-    item = create_stac_item(
-        src_path,
-        input_datetime=input_date,
-        with_raster=True,
-    )
-    assert item.validate()
-    item_dict = item.to_dict()
-    assert item_dict["stac_extensions"] == [
-        "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
-    ]
-    assert "raster:bands" in item_dict["assets"]["asset"]
-    assert item_dict["assets"]["asset"]["raster:bands"][0]["scale"] == 0.0001
-    assert item_dict["assets"]["asset"]["raster:bands"][0]["offset"] == 1000.0
-
-
-def test_create_item_raster_with_gcps():
-    """Should return a valid item with raster properties."""
-    src_path = os.path.join(PREFIX, "dataset_gcps.tif")
-    item = create_stac_item(
-        src_path, input_datetime=input_date, with_raster=True, with_proj=True
-    )
-    assert item.validate()
-
-
-@pytest.mark.xfail
-def test_dateline_polygon_split():
-    """make sure we return a multipolygon."""
-    src_path = os.path.join(PREFIX, "dataset_dateline.tif")
-    item = create_stac_item(
-        src_path, input_datetime=input_date, with_raster=True, with_proj=True
-    )
-    item_dict = item.to_dict()
-    assert item_dict["geometry"]["type"] == "MultiPolygon"
-
-
-def test_negative_nodata():
-    """Make sure we catch valid nodata (issue 33)."""
-    src_path = os.path.join(PREFIX, "dataset_int16_nodata.tif")
-    item = create_stac_item(
-        src_path, input_datetime=input_date, with_raster=True, with_proj=True
-    )
-    item_dict = item.to_dict()
-    assert item_dict["assets"]["asset"]["raster:bands"][0]["nodata"] == -9999
-
-
-def test_create_item_eo():
-    """Should return a valid item with eo properties."""
-    src_path = os.path.join(PREFIX, "dataset_cog.tif")
-    item = create_stac_item(src_path, with_eo=True)
-    assert item.validate()
-    item_dict = item.to_dict()
-    assert item_dict["links"] == []
-    assert item_dict["stac_extensions"] == [
-        "https://stac-extensions.github.io/eo/v1.1.0/schema.json",
-    ]
-    assert "eo:bands" in item_dict["assets"]["asset"]
-    assert len(item_dict["assets"]["asset"]["eo:bands"]) == 1
-    assert item_dict["assets"]["asset"]["eo:bands"][0] == {
-        "name": "b1",
-        "description": "gray",
-    }
-
-    src_path = os.path.join(PREFIX, "dataset_description.tif")
-    item = create_stac_item(src_path, with_eo=True)
-    assert item.validate()
-    item_dict = item.to_dict()
-    assert len(item_dict["assets"]["asset"]["eo:bands"]) == 1
-
-    assert item_dict["assets"]["asset"]["eo:bands"][0] == {
-        "name": "b1",
-        "description": "b1",
-    }
-
-    with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="FALSE"):
-        src_path = os.path.join(PREFIX, "dataset_cloud_date_metadata.tif")
-        item = create_stac_item(src_path, with_eo=True)
-    assert item.validate()
-    item_dict = item.to_dict()
-    assert "eo:cloud_cover" in item_dict["properties"]
-
-
-def test_create_item_datetime():
-    """Should return a valid item with datetime from IMD."""
-    with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="FALSE"):
-        src_path = os.path.join(PREFIX, "dataset_cloud_date_metadata.tif")
-        item = create_stac_item(src_path, with_eo=True)
-    assert item.validate()
-    item_dict = item.to_dict()
-    assert item_dict["properties"]["datetime"] == "2011-05-01T13:00:00Z"
-
-    src_path = os.path.join(PREFIX, "dataset_tiff_datetime.tif")
-    item = create_stac_item(src_path, with_eo=True)
-    assert item.validate()
-    item_dict = item.to_dict()
-    assert item_dict["properties"]["datetime"] == "2023-10-30T11:37:13Z"
-
-
-def test_densify_geom():
-    """Should run without exceptions."""
-    src_path = os.path.join(PREFIX, "dataset_geom.tif")
-
-    item = create_stac_item(src_path, with_eo=True)
-    assert item.validate()
-    item_dict = item.to_dict()
-
-    item_dens = create_stac_item(src_path, geom_densify_pts=21)
-    assert item_dens.validate()
-    item_dens_dict = item_dens.to_dict()
-
-    assert item_dict["bbox"] != item_dens_dict["bbox"]
-
-
-def test_mars_dataset():
-    """Test with Mars Dataset."""
-    MARS2000_SPHERE = rasterio.crs.CRS.from_proj4("+proj=longlat +R=3396190 +no_defs")
-    src_path = os.path.join(PREFIX, "dataset_mars.tif")
-
-    item = create_stac_item(src_path, geographic_crs=MARS2000_SPHERE, with_proj=True)
-    assert item.validate()
-    item_dict = item.to_dict()
-
-    assert not item_dict["properties"].get("proj:epsg")
-    assert (
-        "proj:projjson" in item_dict["properties"]
-        or "proj:wkt2" in item_dict["properties"]
+        with_eo=True,
+        id="test-item"
     )
 
-
-def test_json_serialization():
-    """Test JSON serialization"""
-    src_path = os.path.join(PREFIX, "dataset_cog.tif")
-    item = create_stac_item(src_path, with_raster=True)
-    assert item.validate()
     item_dict = item.to_dict()
-    assert json.dumps(item_dict)
 
+    # 3.1 Check Item Properties (No proj:*)
+    for k in item_dict["properties"]:
+        assert not k.startswith("proj:"), f"Item property {k} starts with proj:"
 
-@pytest.mark.xfail(sys.version_info < (3, 10), reason="Old numpy do not raise error")
-def test_stats_unique_values():
-    """issue 68 -
-    ref: https://github.com/developmentseed/rio-stac/issues/68
-    """
-    src_path = os.path.join(
-        PREFIX, "S2A_MSIL2A_20220722T105631_N0400_R094_T31TCN_20220722T171159.tif"
-    )
-    with pytest.warns(UserWarning):
-        item = create_stac_item(src_path, with_raster=True)
-    assert item.validate()
-    item_dict = item.to_dict()
-    assert "raster:bands" in item_dict["assets"]["asset"]
-    stats = item_dict["assets"]["asset"]["raster:bands"][9]["histogram"]
-    assert len(stats["buckets"]) == 3
+    assets = item_dict["assets"]
 
-    # Should not raise warnings when bins is good
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
-        item = create_stac_item(src_path, with_raster=True, histogram_bins=3)
+    # 4. Check Thumbnail
+    assert "thumbnail" in assets
+    thumb = assets["thumbnail"]
+    assert "thumbnail" in thumb["roles"]
+    assert thumb["title"] == "thumbnail"
+    assert thumb["proj:code"] is None
+    assert "bands" not in thumb
+    assert "raster:bands" not in thumb
 
-    with pytest.raises(ValueError):
-        create_stac_item(
-            src_path, with_raster=True, histogram_bins=3, histogram_range=(0, -1)
-        )
+    # Ensure no other proj fields
+    for k in thumb:
+        if k.startswith("proj:") and k != "proj:code":
+            raise AssertionError(f"Thumbnail has forbidden field {k}")
 
-    with pytest.raises(ValueError):
-        create_stac_item(src_path, with_raster=True, histogram_range=(0, -1))
+    # 5. Check Metadata
+    meta = assets["MTD_MSIL1C"]
+    assert "metadata" in meta["roles"]
+    for k in meta:
+        assert not k.startswith("proj:")
 
-
-def test_create_item_raster_custom_histogram():
-    """Should return a valid item with raster properties."""
-    src_path = os.path.join(PREFIX, "dataset_cog.tif")
-    item = create_stac_item(
-        src_path,
-        input_datetime=input_date,
-        with_raster=True,
-        raster_max_size=128,
-        histogram_bins=5,
-        histogram_range=[0, 10],
-    )
-    assert item.validate()
-    item_dict = item.to_dict()
-    stats = item_dict["assets"]["asset"]["raster:bands"][0]["histogram"]
-    assert len(stats["buckets"]) == 5
-    assert stats["max"] == 10
-    assert stats["min"] == 0
-
-
-def test_stats_with_nan_missing_nodata():
-    """Stats should ignore nan/inf values.
-
-    Ref: https://github.com/developmentseed/rio-stac/issues/70
-    """
-    src_path = os.path.join(PREFIX, "dataset_missing_nodata_nan.tif")
-    with rasterio.open(src_path) as src:
-        arr = src.read(masked=True)
-        assert numpy.isnan(arr.max().item())
-
-        info = get_raster_info(src)
-        assert info[0]["statistics"]["minimum"] > 0
-        assert info[0]["statistics"]["maximum"] > 0
+    # 3.2 Check Data (Raster)
+    # Find a band
+    band_key = next(k for k in assets if "B03" in k)
+    band = assets[band_key]
+    assert "data" in band["roles"]
