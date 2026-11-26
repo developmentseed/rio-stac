@@ -64,13 +64,13 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
 
 - **projection extension** (--with-proj / --without-proj)
 
-    By default the `projection` extension and properties will be added to the item.
+    By default the `projection` extension (v2.1.0) and properties will be added to the item.
 
     link: https://github.com/stac-extensions/projection/
 
     ```json
     {
-        "proj:epsg": 3857,
+        "proj:code": "EPSG:3857",
         "proj:geometry": {"type": "Polygon", "coordinates": [...]},
         "proj:bbox": [...],
         "proj:shape": [8192, 8192],
@@ -78,6 +78,8 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
         "datetime": "2021-03-19T02:27:33.266356Z"
     }
     ```
+    
+    `proj:bbox` and `proj:geometry` are omitted when the CRS is WGS84 as per v2.1.0.
 
     You can pass `--without-proj` to disable it.
 
@@ -196,7 +198,7 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
   "type": "Feature",
   "stac_version": "1.1.0",
   "stac_extensions": [
-    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/projection/v2.1.0/schema.json",
     "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
     "https://stac-extensions.github.io/eo/v1.1.0/schema.json"
   ],
@@ -235,7 +237,7 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
     74.62204314252978
   ],
   "properties": {
-    "proj:epsg": 32621,
+    "proj:code": "EPSG:32621",
     "proj:geometry": {
       "type": "Polygon",
       "coordinates": [
@@ -347,7 +349,7 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
   "type": "Feature",
   "stac_version": "1.1.0",
   "stac_extensions": [
-    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/projection/v2.1.0/schema.json",
     "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
     "https://stac-extensions.github.io/eo/v1.1.0/schema.json"
   ],
@@ -387,40 +389,7 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
   ],
   "properties": {
     "comments:name": "myfile",
-    "proj:epsg": 4326,
-    "proj:geometry": {
-      "type": "Polygon",
-      "coordinates": [
-        [
-          [
-            -44.84032,
-            -23.104184
-          ],
-          [
-            -44.66872,
-            -23.104184
-          ],
-          [
-            -44.66872,
-            -22.932584
-          ],
-          [
-            -44.84032,
-            -22.932584
-          ],
-          [
-            -44.84032,
-            -23.104184
-          ]
-        ]
-      ]
-    },
-    "proj:bbox": [
-      -44.84032,
-      -23.104184,
-      -44.66872,
-      -22.932584
-    ],
+    "proj:code": "EPSG:4326",
     "proj:shape": [
       50,
       50

@@ -54,7 +54,7 @@ $ pip install git+http://github.com/developmentseed/rio-stac
   "type": "Feature",
   "stac_version": "1.1.0",
   "stac_extensions": [
-    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/projection/v2.1.0/schema.json",
     "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
     "https://stac-extensions.github.io/eo/v1.1.0/schema.json"
   ],
@@ -93,7 +93,7 @@ $ pip install git+http://github.com/developmentseed/rio-stac
     74.62204314252978
   ],
   "properties": {
-    "proj:epsg": 32621,
+    "proj:code": "EPSG:32621",
     "proj:geometry": {
       "type": "Polygon",
       "coordinates": [

@@ -1,3 +1,6 @@
+## Unreleased
+
+* **breaking**: update the `projection` extension to `v2.1.0` (was `v1.1.0`). `proj:epsg` (e.g. `32621`) becomes `proj:code` (e.g. `"EPSG:32621"`, or `null` when there is no EPSG code), and `proj:bbox`/`proj:geometry` are omitted when the CRS is WGS84. `get_projection_info` returns `code` instead of `epsg`.
 
 ## 0.12.0 (2025-09-17)
 

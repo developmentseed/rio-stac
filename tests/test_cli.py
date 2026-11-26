@@ -23,12 +23,12 @@ def test_rio_stac_cli(runner):
         assert stac_item["assets"]["asset"]["href"] == src_path
         assert stac_item["links"] == []
         assert stac_item["stac_extensions"] == [
-            "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+            "https://stac-extensions.github.io/projection/v2.1.0/schema.json",
             "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
             "https://stac-extensions.github.io/eo/v1.1.0/schema.json",
         ]
         assert "datetime" in stac_item["properties"]
-        assert "proj:epsg" in stac_item["properties"]
+        assert stac_item["properties"]["proj:code"] == "EPSG:32621"
         assert "raster:bands" in stac_item["assets"]["asset"]
         assert "eo:bands" in stac_item["assets"]["asset"]
 
@@ -104,12 +104,12 @@ def test_rio_stac_cli(runner):
         assert stac_item["assets"]["asset"]
         assert stac_item["links"] == []
         assert stac_item["stac_extensions"] == [
-            "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+            "https://stac-extensions.github.io/projection/v2.1.0/schema.json",
             "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
             "https://stac-extensions.github.io/eo/v1.1.0/schema.json",
         ]
         assert "datetime" in stac_item["properties"]
-        assert "proj:epsg" in stac_item["properties"]
+        assert stac_item["properties"]["proj:code"] == "EPSG:32621"
         assert "raster:bands" in stac_item["assets"]["asset"]
 
         with runner.isolated_filesystem():
@@ -123,12 +123,12 @@ def test_rio_stac_cli(runner):
             assert stac_item["assets"]["asset"]["href"] == src_path
             assert stac_item["links"] == []
             assert stac_item["stac_extensions"] == [
-                "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+                "https://stac-extensions.github.io/projection/v2.1.0/schema.json",
                 "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
                 "https://stac-extensions.github.io/eo/v1.1.0/schema.json",
             ]
             assert "datetime" in stac_item["properties"]
-            assert "proj:epsg" in stac_item["properties"]
+            assert stac_item["properties"]["proj:code"] == "EPSG:3035"
             assert "proj:projjson" not in stac_item["properties"]
             assert "raster:bands" in stac_item["assets"]["asset"]
             assert "eo:bands" in stac_item["assets"]["asset"]
