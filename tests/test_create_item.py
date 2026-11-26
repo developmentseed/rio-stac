@@ -99,7 +99,7 @@ def test_create_item_options():
         "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
     ]
     assert "datetime" in item_dict["properties"]
-    assert "proj:epsg" not in item_dict["properties"]
+    assert "proj:code" not in item_dict["properties"]
     assert "sci:citation" in item_dict["properties"]
 
     # additional extensions and properties
@@ -115,10 +115,11 @@ def test_create_item_options():
     assert item_dict["links"] == []
     assert item_dict["stac_extensions"] == [
         "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
-        "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+        "https://stac-extensions.github.io/projection/v2.1.0/schema.json",
     ]
     assert "datetime" in item_dict["properties"]
-    assert "proj:epsg" in item_dict["properties"]
+    assert item_dict["properties"]["proj:code"] == "EPSG:32621"
+    assert "proj:epsg" not in item_dict["properties"]
     assert "proj:wkt2" not in item_dict["properties"]
     assert "proj:projjson" not in item_dict["properties"]
     assert "sci:citation" in item_dict["properties"]
@@ -175,12 +176,27 @@ def test_proj_without_proj():
     item_dict = item.to_dict()
     assert item_dict["links"] == []
     assert item_dict["stac_extensions"] == [
-        "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+        "https://stac-extensions.github.io/projection/v2.1.0/schema.json",
     ]
     assert "datetime" in item_dict["properties"]
-    # EPSG should be set to None
-    assert not item_dict["properties"]["proj:epsg"]
-    assert item_dict["properties"]["proj:bbox"]
+    # No CRS: no code, and not WGS84 so `proj:bbox` is kept
+    assert item_dict["properties"]["proj:code"] is None
+    with rasterio.open(src_path) as src_dst:
+        assert item_dict["properties"]["proj:bbox"] == list(src_dst.bounds)
+
+
+def test_proj_wgs84():
+    """`proj:bbox` and `proj:geometry` are omitted when the CRS is WGS84. bbox and geometry are kept."""
+    src_path = os.path.join(PREFIX, "dataset_nodata_nan.tif")
+    item = create_stac_item(src_path, input_datetime=input_date, with_proj=True)
+    assert item.validate()
+    properties = item.to_dict()["properties"]
+    assert properties["proj:code"] == "EPSG:4326"
+    assert "proj:bbox" not in properties
+    assert "proj:geometry" not in properties
+    assert properties["proj:shape"] == [341, 316]
+    with rasterio.open(src_path) as src_dst:
+        assert item.bbox == list(src_dst.bounds)
 
 
 def test_create_item_raster():
@@ -345,11 +361,12 @@ def test_mars_dataset():
     assert item.validate()
     item_dict = item.to_dict()
 
-    assert not item_dict["properties"].get("proj:epsg")
-    assert (
-        "proj:projjson" in item_dict["properties"]
-        or "proj:wkt2" in item_dict["properties"]
-    )
+    # No EPSG code: `proj:code` is None and the CRS is written as `proj:wkt2`
+    assert item_dict["properties"]["proj:code"] is None
+    with rasterio.open(src_path) as src_dst:
+        assert (
+            rasterio.crs.CRS.from_wkt(item_dict["properties"]["proj:wkt2"]) == src_dst.crs
+        )
 
 
 def test_json_serialization():
